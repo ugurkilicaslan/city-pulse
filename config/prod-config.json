@@ -1,0 +1,17 @@
+{
+  "env": "production",
+  "mongo": {
+    "uri": "MONGO_URI_BURAYA",
+    "database": "city-pulse"
+  },
+  "gnews": {
+    "apiKey": "6c4921a2bbe9038b6ed04c2f1bee4de5"
+  },
+  "auth": {
+    "apiKey": "PROD_API_KEY_BURAYA_GUVENLi_BIR_KEY"
+  },
+  "server": {
+    "port": 3649,
+    "apiVersion": "1.0"
+  }
+}

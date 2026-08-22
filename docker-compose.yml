@@ -1,0 +1,28 @@
+services:
+  city-pulse:
+    image: city-pulse:latest
+    build:
+      context: .
+      target: production
+    container_name: city-pulse
+    restart: unless-stopped
+    ports:
+      - "3649:3649"
+    mem_limit: 512m
+    memswap_limit: 512m
+    environment:
+      - GOMEMLIMIT=380MiB
+      - ENV=production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3649/api/1.0/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
