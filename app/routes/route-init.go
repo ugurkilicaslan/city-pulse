@@ -43,6 +43,7 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 	exchangeDAO := daos.NewExchangeDAO(db)
 	newsDAO := daos.NewNewsDAO(db)
 	nasaDAO := daos.NewNasaDAO(db)
+	userDAO := daos.NewUserDAO(db)
 
 	exchangeSvc := services.NewExchangeService(exchangeDAO, exchangeClient)
 	newsSvc := services.NewNewsService(newsDAO, newsClient)
@@ -50,25 +51,29 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 	nasaSvc := services.NewNasaService(nasaClient, nasaDAO)
 	githubSvc := services.NewGithubService(githubClient)
 	citySvc := services.NewCityService(exchangeSvc, newsSvc, gameSvc, nasaSvc, githubSvc)
+	userSvc := services.NewUserService(userDAO)
 
-	h := handlers.New(exchangeSvc, newsSvc, gameSvc, citySvc, ctx)
+	h := handlers.New(exchangeSvc, newsSvc, gameSvc, citySvc, userSvc, ctx)
 
 	api := r.Group(config.Config.APIBasePath())
 	api.GET("/health", h.Healthz)
 
-	authorized := api.Group("/")
-	authorized.Use(auth.APIKeyMiddleware())
+	api.POST("/auth/register", h.Register)
+	api.POST("/auth/login", h.Login)
+
+	protected := api.Group("/")
+	protected.Use(auth.JWTMiddleware())
 	{
-		authorized.GET("/exchange/latest", h.ExchangeLatest)
-		authorized.GET("/exchange/convert", h.ExchangeConvert)
+		protected.GET("/exchange/latest", h.ExchangeLatest)
+		protected.GET("/exchange/convert", h.ExchangeConvert)
 
-		authorized.GET("/news/headlines", h.NewsHeadlines)
-		authorized.GET("/news/search", h.NewsSearch)
+		protected.GET("/news/headlines", h.NewsHeadlines)
+		protected.GET("/news/search", h.NewsSearch)
 
-		authorized.GET("/games/deals", h.GameDeals)
-		authorized.GET("/games/search", h.GameSearch)
+		protected.GET("/games/deals", h.GameDeals)
+		protected.GET("/games/search", h.GameSearch)
 
-		authorized.GET("/city/snapshot", h.CitySnapshot)
+		protected.GET("/city/snapshot", h.CitySnapshot)
 	}
 
 	fmt.Println()

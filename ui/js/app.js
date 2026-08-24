@@ -1,8 +1,15 @@
 const BASE = 'http://localhost:3649/api/1.0';
-const KEY  = 'local-dev-key';
 
 async function api(path) {
-    const r = await fetch(BASE + path, { headers: { 'X-API-Key': KEY } });
+    const token = localStorage.getItem('cp_token');
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const r = await fetch(BASE + path, { headers });
+    if (r.status === 401) {
+        localStorage.removeItem('cp_token');
+        localStorage.removeItem('cp_user');
+        window.location.href = '/ui/auth.html';
+        return;
+    }
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
 }

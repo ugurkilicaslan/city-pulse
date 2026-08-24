@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap / Kayıt Ol — City Pulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ui/css/auth.css">
+</head>
+<body class="auth-page">
+
+<!-- ── Navbar ───────────────────────────────────────────── -->
+<nav class="auth-nav">
+    <a class="auth-nav-logo" href="/ui/">
+        <div class="auth-nav-box">
+            <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+                <path d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
+                    fill="rgba(255,255,255,0.25)"/>
+                <polyline points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
+                    stroke="rgba(255,255,255,0.95)" stroke-width="1.8"
+                    fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="auth-nav-title">City Pulse</span>
+    </a>
+    <div class="auth-nav-gap"></div>
+    <a class="auth-nav-link" href="/ui/">← Ana Sayfa</a>
+</nav>
+
+<!-- ── Body ─────────────────────────────────────────────── -->
+<div class="auth-body">
+
+    <!-- Left decorative panel -->
+    <div class="auth-deco">
+        <div class="auth-deco-shapes">
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+        </div>
+        <div class="auth-deco-inner">
+            <div class="deco-badge">
+                <span style="width:6px;height:6px;border-radius:50%;background:#2ECC71;display:inline-block;animation:blink 2s infinite;"></span>
+                LIVE DATA
+            </div>
+            <h2 class="auth-deco-title">Şehrin<br>nabzı burada</h2>
+            <p class="auth-deco-sub">
+                Döviz kurları, haberler, oyun fırsatları<br>
+                ve NASA günün karesi tek platformda.
+            </p>
+
+            <div style="margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem;text-align:left;">
+                <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(255,197,61,0.08);border:1px solid rgba(255,197,61,0.2);border-radius:10px;padding:0.8rem 1rem;">
+                    <span style="font-size:1.4rem;">💱</span>
+                    <div>
+                        <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">Canlı Döviz</div>
+                        <div style="font-size:0.72rem;color:#9575cd;">USD, EUR, CHF kurları</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);border-radius:10px;padding:0.8rem 1rem;">
+                    <span style="font-size:1.4rem;">📰</span>
+                    <div>
+                        <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">Günün Haberleri</div>
+                        <div style="font-size:0.72rem;color:#9575cd;">Şehir bazlı haber akışı</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(109,40,217,0.1);border:1px solid rgba(109,40,217,0.2);border-radius:10px;padding:0.8rem 1rem;">
+                    <span style="font-size:1.4rem;">🚀</span>
+                    <div>
+                        <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">NASA Günün Karesi</div>
+                        <div style="font-size:0.72rem;color:#9575cd;">Uzaydan fotoğraf & video</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right auth panel -->
+    <div class="auth-panel">
+        <div class="auth-card">
+
+            <!-- Tab switcher -->
+            <div class="auth-tabs">
+                <button class="auth-tab tab-active" id="tabLogin" onclick="switchTab('login')">Giriş Yap</button>
+                <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Kayıt Ol</button>
+            </div>
+
+            <!-- ── LOGIN FORM ── -->
+            <div id="loginForm">
+                <h1 class="auth-heading">Tekrar<br>hoş geldin 👋</h1>
+                <p class="auth-heading-sub">Hesabına giriş yap, veriler seni bekliyor.</p>
+
+                <form id="loginFormEl" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">E-posta</label>
+                        <input class="form-input" type="email" id="loginEmail"
+                               placeholder="ornek@email.com" autocomplete="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Şifre</label>
+                        <input class="form-input" type="password" id="loginPassword"
+                               placeholder="••••••••" autocomplete="current-password" required>
+                    </div>
+
+                    <button class="form-btn" id="loginBtn" type="submit">Giriş Yap</button>
+                    <div class="form-msg" id="loginMsg"></div>
+                </form>
+
+                <div class="auth-switch">
+                    Hesabın yok mu? <a onclick="switchTab('register')">Kayıt Ol →</a>
+                </div>
+            </div>
+
+            <!-- ── REGISTER FORM ── -->
+            <div id="registerForm" class="hidden">
+                <h1 class="auth-heading">Hesap<br>oluştur ✦</h1>
+                <p class="auth-heading-sub">Ücretsiz kayıt ol, anında kullanmaya başla.</p>
+
+                <form id="registerFormEl" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="regUsername">Kullanıcı Adı</label>
+                        <input class="form-input" type="text" id="regUsername"
+                               placeholder="citypulse_user" minlength="2" maxlength="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regEmail">E-posta</label>
+                        <input class="form-input" type="email" id="regEmail"
+                               placeholder="ornek@email.com" autocomplete="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPassword">Şifre</label>
+                        <input class="form-input" type="password" id="regPassword"
+                               placeholder="En az 6 karakter" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regConfirm">Şifre Tekrar</label>
+                        <input class="form-input" type="password" id="regConfirm"
+                               placeholder="Şifreni tekrarla" autocomplete="new-password" required>
+                    </div>
+
+                    <button class="form-btn" id="registerBtn" type="submit">Kayıt Ol</button>
+                    <div class="form-msg" id="registerMsg"></div>
+                </form>
+
+                <div class="auth-switch">
+                    Zaten hesabın var mı? <a onclick="switchTab('login')">Giriş Yap →</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="/ui/js/auth.js"></script>
+<script>
+    // Check for ?tab=register URL parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'register') {
+        switchTab('register');
+    }
+</script>
+<style>
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</body>
+</html>

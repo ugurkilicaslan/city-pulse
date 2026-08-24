@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — City Pulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ui/css/style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════ NAVBAR ══════════════════════════════ -->
+<nav class="nav">
+
+    <a class="logo-wrap" href="/" title="city pulse dashboard">
+        <div class="logo-svg-wrap">
+            <div class="logo-bg"></div>
+            <div class="logo-svg">
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- City skyline (soft) -->
+                    <path class="city-path"
+                        d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
+                        fill="rgba(255,255,255,0.22)"/>
+                    <!-- Pulse / heartbeat line -->
+                    <polyline class="pulse-path"
+                        points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
+                        stroke="rgba(255,255,255,0.9)" stroke-width="1.6"
+                        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        <span class="nav-title">city pulse</span>
+    </a>
+
+    <div class="live"><div class="live-dot"></div>LIVE</div>
+
+    <div class="nav-gap"></div>
+
+    <div class="ctrl-group">
+        <select class="ctrl" id="citySelect" onchange="loadData()">
+            <option value="istanbul">🇹🇷 İstanbul</option>
+            <option value="ankara">🇹🇷 Ankara</option>
+            <option value="new york">🇺🇸 New York</option>
+            <option value="london">🇬🇧 London</option>
+            <option value="berlin">🇩🇪 Berlin</option>
+            <option value="paris">🇫🇷 Paris</option>
+            <option value="tokyo">🇯🇵 Tokyo</option>
+        </select>
+
+        <select class="ctrl" id="langSelect" onchange="loadData()">
+            <option value="tr">TR</option>
+            <option value="en">EN</option>
+            <option value="de">DE</option>
+        </select>
+
+        <button class="btn-refresh" id="refreshBtn" onclick="loadData()">
+            <span class="spin-ico" id="spinIco">⟳</span>&nbsp;Yenile
+        </button>
+
+        <span class="nav-user" id="navUser"></span>
+        <button class="btn-logout" id="logoutBtn" onclick="logout()">Çıkış</button>
+    </div>
+</nav>
+
+<!-- ═══════════════════════════ MAIN ════════════════════════════════ -->
+<main class="main">
+
+    <div class="page-head">
+        <div class="page-city">
+            <span>📍</span>
+            <span id="cityLabel">İstanbul</span>
+        </div>
+        <div class="page-time" id="pageTime"></div>
+    </div>
+
+    <!-- Exchange -->
+    <div class="sec-lbl">Canlı Döviz Kurları</div>
+    <div class="xgrid" id="xgrid">
+        <div class="sk sk-x"></div>
+        <div class="sk sk-x"></div>
+        <div class="sk sk-x"></div>
+        <div class="sk sk-x"></div>
+    </div>
+
+    <!-- News + Games -->
+    <div class="cols">
+
+        <div>
+            <div class="col-head">
+                <div class="col-ico news">📰</div>
+                <div class="col-title">Günün Haberleri</div>
+                <span class="col-badge" id="newsBadge">—</span>
+            </div>
+            <div class="nlist" id="nlist">
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="col-head">
+                <div class="col-ico games">🎮</div>
+                <div class="col-title">Oyun Fırsatları</div>
+                <span class="col-badge" id="gamesBadge">—</span>
+            </div>
+            <div class="glist" id="glist">
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+            </div>
+        </div>
+
+    <!-- NASA + GitHub -->
+    <div class="cols" style="margin-top: 1.5rem;">
+        <div>
+            <div class="col-head">
+                <div class="col-ico">🚀</div>
+                <div class="col-title">NASA Günün Karesi</div>
+            </div>
+            <div id="nasaBox" style="background: var(--card); border: 1px solid var(--bdr); border-radius: 8px; padding: 1rem; border-left: 4px solid var(--gradient);">
+                <div class="sk sk-c"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="col-head">
+                <div class="col-ico">⭐</div>
+                <div class="col-title">GitHub Trending</div>
+            </div>
+            <div class="nlist" id="ghlist">
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+                <div class="sk sk-c"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ═══════════════════════════ JS ══════════════════════════════════ -->
+<script>
+    (function() {
+        const token = localStorage.getItem('cp_token');
+        if (!token) {
+            window.location.href = '/ui/auth.html';
+            return;
+        }
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.exp * 1000 < Date.now()) {
+                localStorage.removeItem('cp_token');
+                localStorage.removeItem('cp_user');
+                window.location.href = '/ui/auth.html';
+            }
+        } catch(e) {
+            window.location.href = '/ui/auth.html';
+        }
+    })();
+
+    function logout() {
+        localStorage.removeItem('cp_token');
+        localStorage.removeItem('cp_user');
+        window.location.href = '/ui/';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('cp_user') || '{}');
+        const el = document.getElementById('navUser');
+        if (el && user.username) el.textContent = '👤 ' + user.username;
+    });
+</script>
+<script src="/ui/js/app.js"></script>
+</body>
+</html>

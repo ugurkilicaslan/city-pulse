@@ -37,6 +37,7 @@ func ViperRead() {
 		GNewsAPIKey:      viper.GetString("gnews.apiKey"),
 		NASAAPIKey:       viper.GetString("nasa.apiKey"),
 		AuthAPIKey:       viper.GetString("auth.apiKey"),
+		JWTSecret:        viper.GetString("auth.jwtSecret"),
 		ServerPort:       viper.GetInt("server.port"),
 		ServerAPIVersion: viper.GetString("server.apiVersion"),
 	}

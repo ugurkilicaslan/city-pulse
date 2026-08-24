@@ -3,143 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>city pulse</title>
+    <title>City Pulse — Real-Time City Intelligence</title>
+    <meta name="description" content="City Pulse ile döviz kurları, günün haberleri, oyun fırsatları ve NASA verileri tek bir platformda.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/ui/css/style.css">
+    <link rel="stylesheet" href="/ui/css/auth.css">
 </head>
 <body>
 
-<!-- ═══════════════════════════ NAVBAR ══════════════════════════════ -->
-<nav class="nav">
+<section class="hero">
 
-    <a class="logo-wrap" href="/" title="city pulse dashboard">
-        <div class="logo-svg-wrap">
-            <div class="logo-bg"></div>
-            <div class="logo-svg">
-                <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- City skyline (soft) -->
-                    <path class="city-path"
-                        d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
-                        fill="rgba(255,255,255,0.22)"/>
-                    <!-- Pulse / heartbeat line -->
-                    <polyline class="pulse-path"
+    <!-- Animated geometric background -->
+    <div class="hero-bg">
+        <div class="geo-shapes">
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+            <div class="geo-shape"></div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="hero-content">
+
+        <!-- Logo -->
+        <div class="hero-logo-wrap">
+            <div class="hero-logo-box">
+                <svg width="36" height="36" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
+                        fill="rgba(255,255,255,0.25)"/>
+                    <polyline
                         points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
-                        stroke="rgba(255,255,255,0.9)" stroke-width="1.6"
+                        stroke="rgba(255,255,255,0.95)" stroke-width="1.8"
                         fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
+            <span class="hero-logo-text">CITY <span>PULSE</span></span>
         </div>
-        <span class="nav-title">city pulse</span>
-    </a>
 
-    <div class="live"><div class="live-dot"></div>LIVE</div>
+        <p class="hero-tagline">Real-time city intelligence platform</p>
 
-    <div class="nav-gap"></div>
+        <h1 class="hero-title">
+            Şehrin nabzını<br>
+            <em>anlık</em> takip et
+        </h1>
 
-    <div class="ctrl-group">
-        <select class="ctrl" id="citySelect" onchange="loadData()">
-            <option value="istanbul">🇹🇷 İstanbul</option>
-            <option value="ankara">🇹🇷 Ankara</option>
-            <option value="new york">🇺🇸 New York</option>
-            <option value="london">🇬🇧 London</option>
-            <option value="berlin">🇩🇪 Berlin</option>
-            <option value="paris">🇫🇷 Paris</option>
-            <option value="tokyo">🇯🇵 Tokyo</option>
-        </select>
+        <p class="hero-sub">
+            Döviz kurları, dünya haberleri, oyun fırsatları, NASA'nın günün karesi ve GitHub trend projeleri — hepsi tek bir akıllı platformda.
+        </p>
 
-        <select class="ctrl" id="langSelect" onchange="loadData()">
-            <option value="tr">TR</option>
-            <option value="en">EN</option>
-            <option value="de">DE</option>
-        </select>
-
-        <button class="btn-refresh" id="refreshBtn" onclick="loadData()">
-            <span class="spin-ico" id="spinIco">⟳</span>&nbsp;Yenile
-        </button>
-    </div>
-</nav>
-
-<!-- ═══════════════════════════ MAIN ════════════════════════════════ -->
-<main class="main">
-
-    <div class="page-head">
-        <div class="page-city">
-            <span>📍</span>
-            <span id="cityLabel">İstanbul</span>
+        <div class="hero-actions">
+            <a href="/ui/auth.html" class="hero-btn hero-btn-primary" id="heroLoginBtn">
+                🚀 Hemen Başla
+            </a>
+            <a href="/ui/auth.html?tab=register" class="hero-btn hero-btn-secondary" id="heroRegisterBtn">
+                ✦ Kayıt Ol
+            </a>
         </div>
-        <div class="page-time" id="pageTime"></div>
+
     </div>
 
-    <!-- Exchange -->
-    <div class="sec-lbl">Canlı Döviz Kurları</div>
-    <div class="xgrid" id="xgrid">
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
-    </div>
-
-    <!-- News + Games -->
-    <div class="cols">
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico news">📰</div>
-                <div class="col-title">Günün Haberleri</div>
-                <span class="col-badge" id="newsBadge">—</span>
-            </div>
-            <div class="nlist" id="nlist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-            </div>
+    <!-- Bottom stats -->
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <span class="hero-stat-val">5+</span>
+            <span class="hero-stat-lbl">Canlı API</span>
         </div>
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico games">🎮</div>
-                <div class="col-title">Oyun Fırsatları</div>
-                <span class="col-badge" id="gamesBadge">—</span>
-            </div>
-            <div class="glist" id="glist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-            </div>
+        <div class="hero-stat">
+            <span class="hero-stat-val">7</span>
+            <span class="hero-stat-lbl">Şehir</span>
         </div>
-
-    <!-- NASA + GitHub -->
-    <div class="cols" style="margin-top: 1.5rem;">
-        <div>
-            <div class="col-head">
-                <div class="col-ico">🚀</div>
-                <div class="col-title">NASA Günün Karesi</div>
-            </div>
-            <div id="nasaBox" style="background: var(--card); border: 1px solid var(--bdr); border-radius: 8px; padding: 1rem; border-left: 4px solid var(--gradient);">
-                <div class="sk sk-c"></div>
-            </div>
-        </div>
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico">⭐</div>
-                <div class="col-title">GitHub Trending</div>
-            </div>
-            <div class="nlist" id="ghlist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-            </div>
+        <div class="hero-stat">
+            <span class="hero-stat-val">∞</span>
+            <span class="hero-stat-lbl">Anlık Veri</span>
         </div>
     </div>
-</main>
 
-<!-- ═══════════════════════════ JS ══════════════════════════════════ -->
-<script src="/ui/js/app.js"></script>
+    <div class="hero-scroll">↓ Dashboard'a gir</div>
+
+</section>
+
+<script>
+    // Already logged in → go to dashboard
+    (function() {
+        const token = localStorage.getItem('cp_token');
+        if (!token) return;
+        try {
+            const p = JSON.parse(atob(token.split('.')[1]));
+            if (p.exp * 1000 > Date.now()) {
+                document.getElementById('heroLoginBtn').href = '/ui/dashboard.html';
+                document.getElementById('heroLoginBtn').textContent = '🚀 Dashboard\'a Git';
+            }
+        } catch(e) {}
+    })();
+</script>
+
 </body>
 </html>

@@ -14,6 +14,7 @@ const (
 	ExchangeRates = "exchangeRates"
 	NewsArticles  = "newsArticles"
 	NasaApods     = "nasaApods"
+	Users         = "users"
 )
 
 // Connect — MongoDB'ye bağlanır ve ping atar
@@ -56,6 +57,14 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 	_, err = db.Collection(NasaApods).Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "cachedAt", Value: 1}},
 		Options: options.Index().SetExpireAfterSeconds(43200),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Collection(Users).Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
 	})
 	return err
 }

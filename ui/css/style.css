@@ -305,3 +305,30 @@ select.ctrl:hover, select.ctrl:focus {
     background: var(--bg2); border: 1px solid var(--bdr);
     border-radius: 6px; padding: .3rem .6rem; color: var(--t2);
 }
+
+/* ─── Dashboard nav extras ─── */
+.nav-user {
+    font-size: 0.8rem;
+    color: var(--t2);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-logout {
+    background: transparent;
+    color: var(--t3);
+    border: 1px solid var(--bdr);
+    border-radius: 6px;
+    padding: 0.35rem 0.8rem;
+    font-family: 'Aldrich', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-logout:hover {
+    color: #fb7185;
+    border-color: rgba(244,63,94,0.4);
+}

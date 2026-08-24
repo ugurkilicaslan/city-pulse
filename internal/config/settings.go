@@ -9,6 +9,7 @@ type Settings struct {
 	GNewsAPIKey string
 	NASAAPIKey  string
 	AuthAPIKey  string
+	JWTSecret   string
 
 	ServerPort       int
 	ServerAPIVersion string
