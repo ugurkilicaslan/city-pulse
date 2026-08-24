@@ -28,13 +28,330 @@ body {
 /* ═══════════════════════════ NAV ═══════════════════════════ */
 .nav {
     position: sticky; top: 0; z-index: 50;
-    background: var(--bg2);
+    background: rgba(36, 16, 54, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 3px solid var(--primary);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    height: 70px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    height: 68px;
     display: flex; align-items: center;
-    padding: 0 1.75rem; gap: 1.25rem;
+    padding: 0 1.5rem; gap: 1rem;
 }
+
+/* Nav section tabs */
+.nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}
+
+.nav-tab {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    background: transparent;
+    color: var(--t3);
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-family: 'Aldrich', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+
+.nav-tab:hover {
+    color: var(--t2);
+    background: rgba(167,139,250,0.1);
+    border-color: rgba(167,139,250,0.2);
+}
+
+.nav-tab.active {
+    color: var(--primary);
+    background: rgba(255,197,61,0.1);
+    border-color: rgba(255,197,61,0.35);
+}
+
+/* Thin divider between tabs and controls */
+.nav-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--bdr);
+    flex-shrink: 0;
+}
+
+/* ─── Video background ─── */
+.video-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.video-bg iframe,
+.video-bg video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 56.25vw;
+    min-height: 100vh;
+    min-width: 177.78vh;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    border: none;
+}
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(28, 12, 43, 0.82);
+}
+
+/* ─── Section system ─── */
+.section { display: block; }
+.section.hidden { display: none; }
+
+/* ─── NASA dedicated page ─── */
+.nasa-page {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 2rem;
+    min-height: calc(100vh - 68px - 4rem);
+}
+
+@media (max-width: 960px) {
+    .nasa-page { grid-template-columns: 1fr; }
+}
+
+.nasa-media {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--bdr);
+    max-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nasa-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.nasa-media iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    border: none;
+}
+
+.nasa-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.nasa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(109,40,217,0.2);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    font-family: 'Aldrich', sans-serif;
+    font-size: 0.65rem;
+    color: var(--t2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    width: fit-content;
+}
+
+.nasa-title {
+    font-family: 'Aldrich', sans-serif;
+    font-size: 1.8rem;
+    line-height: 1.2;
+    color: var(--t1);
+}
+
+.nasa-date {
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-family: 'Aldrich', sans-serif;
+}
+
+.nasa-desc {
+    font-size: 0.88rem;
+    color: var(--t2);
+    line-height: 1.75;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 45vh;
+    padding-right: 0.5rem;
+}
+
+.nasa-desc::-webkit-scrollbar { width: 4px; }
+.nasa-desc::-webkit-scrollbar-track { background: var(--card); }
+.nasa-desc::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 2px; }
+
+.nasa-credit {
+    font-size: 0.72rem;
+    color: var(--t3);
+    border-top: 1px solid var(--bdr);
+    padding-top: 0.8rem;
+}
+
+/* ─── GitHub grid ─── */
+.gh-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.gh-card {
+    background: var(--card);
+    border: 1px solid var(--bdr);
+    border-radius: 10px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .15s, box-shadow .2s, border-color .2s;
+    border-left: 4px solid rgba(109,40,217,0.5);
+}
+
+.gh-card:hover {
+    transform: translate(-2px,-2px);
+    box-shadow: 4px 4px 0 rgba(11,5,26,0.4);
+    border-left-color: var(--primary);
+}
+
+.gh-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.gh-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--bg2);
+    border: 1px solid var(--bdr);
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.gh-name {
+    font-family: 'Aldrich', sans-serif;
+    font-size: 0.85rem;
+    color: var(--t1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gh-desc {
+    font-size: 0.78rem;
+    color: var(--t2);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.gh-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.72rem;
+    color: var(--t3);
+}
+
+.gh-lang {
+    display: flex; align-items: center; gap: 0.3rem;
+}
+
+.gh-lang-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+}
+
+.gh-stars { margin-left: auto; color: var(--primary); font-family: 'Aldrich', sans-serif; }
+
+/* ─── Games grid layout ─── */
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+/* ─── News full layout ─── */
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+}
+
+.ncard-full {
+    background: var(--card);
+    border: 1px solid var(--bdr);
+    border-radius: 10px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .15s, box-shadow .2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.ncard-full:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 rgba(11,5,26,0.4); }
+
+.ncard-full-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background: var(--bg2);
+}
+
+.ncard-full-body {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ncard-full-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ncard-full-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+}
+
+
 
 /* Logo */
 .logo-wrap {

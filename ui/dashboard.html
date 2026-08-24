@@ -10,19 +10,44 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════ NAVBAR ══════════════════════════════ -->
+<!-- ── Auth guard (immediate redirect if no token) ── -->
+<script>
+(function() {
+    const token = localStorage.getItem('cp_token');
+    if (!token) { window.location.href = '/ui/auth.html'; return; }
+    try {
+        const p = JSON.parse(atob(token.split('.')[1]));
+        if (p.exp * 1000 < Date.now()) {
+            localStorage.removeItem('cp_token');
+            localStorage.removeItem('cp_user');
+            window.location.href = '/ui/auth.html';
+        }
+    } catch(e) { window.location.href = '/ui/auth.html'; }
+})();
+</script>
+
+<!-- ── Video Background ── -->
+<div class="video-bg">
+    <iframe
+        src="https://www.youtube.com/embed/xNN7iTA57jM?autoplay=1&mute=1&loop=1&playlist=xNN7iTA57jM&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0"
+        frameborder="0"
+        allow="autoplay; encrypted-media"
+        title="bg"
+    ></iframe>
+    <div class="video-overlay"></div>
+</div>
+
+<!-- ══════════════════════════ NAVBAR ══════════════════════════ -->
 <nav class="nav">
 
-    <a class="logo-wrap" href="/" title="city pulse dashboard">
+    <a class="logo-wrap" href="/ui/" title="City Pulse">
         <div class="logo-svg-wrap">
             <div class="logo-bg"></div>
             <div class="logo-svg">
-                <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- City skyline (soft) -->
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
                     <path class="city-path"
                         d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
                         fill="rgba(255,255,255,0.22)"/>
-                    <!-- Pulse / heartbeat line -->
                     <polyline class="pulse-path"
                         points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
                         stroke="rgba(255,255,255,0.9)" stroke-width="1.6"
@@ -35,10 +60,22 @@
 
     <div class="live"><div class="live-dot"></div>LIVE</div>
 
+    <div class="nav-divider"></div>
+
+    <!-- Section tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" data-section="exchange" onclick="navigateTo('exchange')">💱 Döviz</button>
+        <button class="nav-tab" data-section="news" onclick="navigateTo('news')">📰 Haberler</button>
+        <button class="nav-tab" data-section="games" onclick="navigateTo('games')">🎮 Oyunlar</button>
+        <button class="nav-tab" data-section="nasa" onclick="navigateTo('nasa')">🚀 NASA</button>
+        <button class="nav-tab" data-section="github" onclick="navigateTo('github')">⭐ GitHub</button>
+    </div>
+
     <div class="nav-gap"></div>
 
-    <div class="ctrl-group">
-        <select class="ctrl" id="citySelect" onchange="loadData()">
+    <!-- Context-sensitive controls -->
+    <div class="ctrl-group" id="ctrlGroup">
+        <select class="ctrl" id="citySelect" onchange="onContextChange()">
             <option value="istanbul">🇹🇷 İstanbul</option>
             <option value="ankara">🇹🇷 Ankara</option>
             <option value="new york">🇺🇸 New York</option>
@@ -47,121 +84,106 @@
             <option value="paris">🇫🇷 Paris</option>
             <option value="tokyo">🇯🇵 Tokyo</option>
         </select>
-
-        <select class="ctrl" id="langSelect" onchange="loadData()">
+        <select class="ctrl" id="langSelect" onchange="onContextChange()">
             <option value="tr">TR</option>
             <option value="en">EN</option>
             <option value="de">DE</option>
         </select>
-
-        <button class="btn-refresh" id="refreshBtn" onclick="loadData()">
-            <span class="spin-ico" id="spinIco">⟳</span>&nbsp;Yenile
+        <button class="btn-refresh" id="refreshBtn" onclick="refresh()">
+            <span class="spin-ico">⟳</span>&nbsp;Yenile
         </button>
-
-        <span class="nav-user" id="navUser"></span>
-        <button class="btn-logout" id="logoutBtn" onclick="logout()">Çıkış</button>
     </div>
+
+    <span class="nav-user" id="navUser"></span>
+    <button class="btn-logout" onclick="logout()">Çıkış</button>
+
 </nav>
 
-<!-- ═══════════════════════════ MAIN ════════════════════════════════ -->
+<!-- ══════════════════════════ MAIN ══════════════════════════ -->
 <main class="main">
 
-    <div class="page-head">
-        <div class="page-city">
-            <span>📍</span>
-            <span id="cityLabel">İstanbul</span>
+    <!-- ─── SECTION: Exchange ─── -->
+    <div id="section-exchange" class="section">
+        <div class="page-head">
+            <div class="page-city"><span>💱</span><span id="cityLabel">İstanbul</span> — Döviz Kurları</div>
+            <div class="page-time" id="pageTime"></div>
         </div>
-        <div class="page-time" id="pageTime"></div>
+        <div class="sec-lbl">Canlı Kurlar</div>
+        <div class="xgrid" id="xgrid">
+            <div class="sk sk-x"></div>
+            <div class="sk sk-x"></div>
+            <div class="sk sk-x"></div>
+            <div class="sk sk-x"></div>
+        </div>
     </div>
 
-    <!-- Exchange -->
-    <div class="sec-lbl">Canlı Döviz Kurları</div>
-    <div class="xgrid" id="xgrid">
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
-        <div class="sk sk-x"></div>
+    <!-- ─── SECTION: News ─── -->
+    <div id="section-news" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>📰</span><span id="cityLabelNews">İstanbul</span> — Günün Haberleri</div>
+            <span class="col-badge" id="newsBadge">—</span>
+        </div>
+        <div class="news-grid" id="nlist">
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+        </div>
     </div>
 
-    <!-- News + Games -->
-    <div class="cols">
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico news">📰</div>
-                <div class="col-title">Günün Haberleri</div>
-                <span class="col-badge" id="newsBadge">—</span>
-            </div>
-            <div class="nlist" id="nlist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-            </div>
+    <!-- ─── SECTION: Games ─── -->
+    <div id="section-games" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>🎮</span>Oyun Fırsatları</div>
+            <span class="col-badge" id="gamesBadge">—</span>
         </div>
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico games">🎮</div>
-                <div class="col-title">Oyun Fırsatları</div>
-                <span class="col-badge" id="gamesBadge">—</span>
-            </div>
-            <div class="glist" id="glist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-            </div>
+        <div class="games-grid" id="glist">
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
         </div>
+    </div>
 
-    <!-- NASA + GitHub -->
-    <div class="cols" style="margin-top: 1.5rem;">
-        <div>
-            <div class="col-head">
-                <div class="col-ico">🚀</div>
-                <div class="col-title">NASA Günün Karesi</div>
-            </div>
-            <div id="nasaBox" style="background: var(--card); border: 1px solid var(--bdr); border-radius: 8px; padding: 1rem; border-left: 4px solid var(--gradient);">
-                <div class="sk sk-c"></div>
-            </div>
+    <!-- ─── SECTION: NASA ─── -->
+    <div id="section-nasa" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>🚀</span>NASA — Günün Astronomik Karesi</div>
         </div>
-
-        <div>
-            <div class="col-head">
-                <div class="col-ico">⭐</div>
-                <div class="col-title">GitHub Trending</div>
-            </div>
-            <div class="nlist" id="ghlist">
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
-                <div class="sk sk-c"></div>
+        <div id="nasaContent">
+            <div class="nasa-page">
+                <div class="nasa-media"><div class="sk" style="width:100%;height:100%;min-height:400px;"></div></div>
+                <div class="nasa-info">
+                    <div class="sk sk-x"></div>
+                    <div class="sk sk-x"></div>
+                    <div class="sk sk-c"></div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- ─── SECTION: GitHub ─── -->
+    <div id="section-github" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>⭐</span>GitHub Trending</div>
+        </div>
+        <div class="gh-grid" id="ghgrid">
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+        </div>
+    </div>
+
 </main>
 
-<!-- ═══════════════════════════ JS ══════════════════════════════════ -->
 <script>
-    (function() {
-        const token = localStorage.getItem('cp_token');
-        if (!token) {
-            window.location.href = '/ui/auth.html';
-            return;
-        }
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            if (payload.exp * 1000 < Date.now()) {
-                localStorage.removeItem('cp_token');
-                localStorage.removeItem('cp_user');
-                window.location.href = '/ui/auth.html';
-            }
-        } catch(e) {
-            window.location.href = '/ui/auth.html';
-        }
-    })();
-
     function logout() {
         localStorage.removeItem('cp_token');
         localStorage.removeItem('cp_user');
