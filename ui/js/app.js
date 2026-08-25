@@ -108,14 +108,18 @@ async function loadSnapshot() {
     }
 
     try {
-        const snap = await api(`/city/snapshot?city=${encodeURIComponent(city)}&lang=${lang}`);
+        const [snap, weather, crypto] = await Promise.all([
+            api(`/city/snapshot?city=${encodeURIComponent(city)}&lang=${lang}`),
+            api(`/weather/current?city=${encodeURIComponent(city)}`),
+            api(`/crypto/prices`)
+        ]);
         if (!snap) return;
 
-        cachedData = snap;
+        cachedData = { ...snap, weather, crypto };
         const pt = document.getElementById('pageTime');
         if (pt) pt.textContent = '🕐 ' + new Date().toLocaleTimeString('tr-TR');
 
-        renderSection(currentSection, snap);
+        renderSection(currentSection, cachedData);
 
     } catch(e) {
         console.error(e);
@@ -133,6 +137,8 @@ function renderSection(section, snap) {
         case 'games':    renderGames(snap.gameDeals); break;
         case 'nasa':     renderNasa(snap.nasaApod); break;
         case 'github':   renderGithub(snap.githubTrend); break;
+        case 'weather':  renderWeather(snap.weather); break;
+        case 'crypto':   renderCrypto(snap.crypto); break;
     }
 }
 
@@ -271,7 +277,66 @@ function renderGithub(repos) {
             </div>
         </a>`).join('');
 }
+/* ─── Render: Weather ─── */
+function renderWeather(w) {
+    const el = document.getElementById('weatherContent');
+    const cityLbl = document.getElementById('cityLabelWeather');
+    if (cityLbl && w) cityLbl.textContent = w.city || 'Şehir';
+    if (!el) return;
+    if (!w || w.error) {
+        el.innerHTML = '<div class="empty"><span class="empty-ico">🌧️</span>Hava durumu alınamadı</div>';
+        return;
+    }
+    
+    el.innerHTML = `
+        <div style="background:var(--card); border:1px solid var(--bdr); border-radius:12px; padding:2rem; width:100%; max-width:400px; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,0.15);">
+            <div style="font-size:4rem; margin-bottom:1rem; animation: geo-float 3s infinite alternate;">${w.emoji}</div>
+            <div style="font-family:'Aldrich',sans-serif; font-size:2.5rem; color:var(--t1); font-weight:bold; margin-bottom:0.5rem;">${w.temperature}°C</div>
+            <div style="font-size:1.1rem; color:var(--primary); font-weight:600; margin-bottom:1.5rem; text-transform:uppercase;">${w.condition}</div>
+            <div style="display:flex; justify-content:space-around; border-top:1px solid var(--bdr); padding-top:1.5rem;">
+                <div>
+                    <div style="font-size:0.75rem; color:var(--t3); text-transform:uppercase; margin-bottom:0.3rem;">Rüzgar</div>
+                    <div style="font-size:1rem; color:var(--t1); font-weight:bold;">${w.windSpeed} km/s</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--t3); text-transform:uppercase; margin-bottom:0.3rem;">Gündüz/Gece</div>
+                    <div style="font-size:1rem; color:var(--t1); font-weight:bold;">${w.isDay ? 'Gündüz ☀️' : 'Gece 🌙'}</div>
+                </div>
+            </div>
+        </div>`;
+}
 
+/* ─── Render: Crypto ─── */
+function renderCrypto(data) {
+    const el = document.getElementById('cryptolist');
+    if (!el) return;
+    if (!data || !data.coins || !data.coins.length) {
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">📉</span>Kripto verisi alınamadı</div>';
+        return;
+    }
+    
+    el.innerHTML = data.coins.map(c => {
+        const isUp = c.change24hUsd >= 0;
+        const clr = isUp ? 'var(--mint)' : '#fb7185';
+        const sign = isUp ? '+' : '';
+        return `
+        <div style="background:var(--card); border:1px solid var(--bdr); border-radius:10px; padding:1.2rem; display:flex; flex-direction:column; gap:0.8rem; transition:transform 0.15s, box-shadow 0.2s; border-left:4px solid var(--primary);" 
+             onmouseover="this.style.transform='translate(-2px,-2px)'; this.style.boxShadow='4px 4px 0 rgba(11,5,26,0.4)'"
+             onmouseout="this.style.transform=''; this.style.boxShadow='none'">
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+                <img src="${c.logoUrl}" style="width:32px; height:32px; border-radius:50%; background:#fff; padding:2px;">
+                <div style="flex:1;">
+                    <div style="font-family:'Aldrich',sans-serif; font-size:1rem; color:var(--t1); font-weight:bold;">${c.name}</div>
+                    <div style="font-size:0.7rem; color:var(--t3); text-transform:uppercase;">${c.symbol}</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-top:0.5rem;">
+                <div style="font-family:'Aldrich',sans-serif; font-size:1.4rem; font-weight:bold; color:var(--t1);">$${c.priceUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                <div style="font-family:'Inter',sans-serif; font-size:0.85rem; font-weight:600; color:${clr}; background:rgba(0,0,0,0.2); padding:0.2rem 0.5rem; border-radius:6px;">${sign}${c.change24hUsd.toFixed(2)}%</div>
+            </div>
+        </div>`;
+    }).join('');
+}
 /* ─── Error state ─── */
 function showError(msg) {
     const el = document.getElementById('xgrid');
@@ -288,7 +353,7 @@ function showError(msg) {
 document.addEventListener('DOMContentLoaded', () => {
     // Read hash for initial section
     const hash = window.location.hash.replace('#', '') || 'exchange';
-    const validSections = ['exchange', 'news', 'games', 'nasa', 'github'];
+    const validSections = ['exchange', 'news', 'games', 'nasa', 'github', 'weather', 'crypto'];
     const initSection = validSections.includes(hash) ? hash : 'exchange';
 
     // Navigate without triggering data load yet
