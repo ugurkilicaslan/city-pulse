@@ -62,4 +62,3 @@ func JWTMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

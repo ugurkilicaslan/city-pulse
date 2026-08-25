@@ -11,10 +11,14 @@ import (
 
 // MongoDB collection isimleri — değişmez sabitler
 const (
-	ExchangeRates = "exchangeRates"
-	NewsArticles  = "newsArticles"
-	NasaApods     = "nasaApods"
-	Users         = "users"
+	ExchangeRates   = "exchangeRates"
+	NewsArticles    = "newsArticles"
+	NasaApods       = "nasaApods"
+	Users           = "users"
+	AnalyticsEvents = "analyticsEvents"
+	UserPreferences = "userPreferences"
+	Bookmarks       = "bookmarks"
+	PriceAlerts     = "priceAlerts"
 )
 
 // Connect — MongoDB'ye bağlanır ve ping atar

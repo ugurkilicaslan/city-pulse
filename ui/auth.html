@@ -12,6 +12,12 @@
 <body class="auth-page">
 
 <!-- ── Canvas Starfield Background ── -->
+<div class="video-bg">
+    <video autoplay loop muted playsinline>
+        <source src="https://cdn.coverr.co/videos/coverr-night-traffic-in-the-city-4933/1080p.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+</div>
 <canvas id="starfield" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;"></canvas>
 
 <!-- ── Navbar ───────────────────────────────────────────── -->
@@ -52,21 +58,27 @@
 
             <div style="margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem;text-align:left;">
                 <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(255,197,61,0.08);border:1px solid rgba(255,197,61,0.2);border-radius:10px;padding:0.8rem 1rem;">
-                    <span style="font-size:1.4rem;">💱</span>
+                    <span style="color:var(--primary);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </span>
                     <div>
                         <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">Canlı Döviz</div>
                         <div style="font-size:0.72rem;color:#9575cd;">USD, EUR, CHF kurları</div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);border-radius:10px;padding:0.8rem 1rem;">
-                    <span style="font-size:1.4rem;">📰</span>
+                    <span style="color:#2dd4bf;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 6h10v4H2z"/><path d="M6 14h12M6 18h12"/></svg>
+                    </span>
                     <div>
                         <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">Günün Haberleri</div>
                         <div style="font-size:0.72rem;color:#9575cd;">Şehir bazlı haber akışı</div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:0.8rem;background:rgba(109,40,217,0.1);border:1px solid rgba(109,40,217,0.2);border-radius:10px;padding:0.8rem 1rem;">
-                    <span style="font-size:1.4rem;">🚀</span>
+                    <span style="color:#a78bfa;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    </span>
                     <div>
                         <div style="font-family:'Aldrich',sans-serif;font-size:0.8rem;color:#fdfcff;">NASA Günün Karesi</div>
                         <div style="font-size:0.72rem;color:#9575cd;">Uzaydan fotoğraf & video</div>

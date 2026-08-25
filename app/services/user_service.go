@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrEmailExists   = errors.New("bu email zaten kayıtlı")
-	ErrInvalidCreds  = errors.New("email veya şifre hatalı")
+	ErrEmailExists  = errors.New("bu email zaten kayıtlı")
+	ErrInvalidCreds = errors.New("email veya şifre hatalı")
 )
 
 type UserService struct {
