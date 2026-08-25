@@ -444,9 +444,9 @@ body {
     flex: 1;
     padding: 0.75rem;
     font-family: 'Aldrich', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     background: transparent;
     color: var(--t3);
     border: none;
@@ -457,6 +457,7 @@ body {
 .auth-tab.tab-active {
     background: var(--primary);
     color: var(--dark);
+    font-weight: bold;
 }
 
 /* Form heading */
@@ -509,28 +510,32 @@ body {
     box-shadow: 0 0 0 3px rgba(255,197,61,0.12);
 }
 
-/* Submit button */
+/* Submit button — unified primary style */
 .form-btn {
     width: 100%;
-    padding: 0.9rem;
+    padding: 0.85rem;
     background: var(--primary);
     color: var(--dark);
     border: 2px solid var(--dark);
     border-radius: 8px;
     font-family: 'Aldrich', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.07em;
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.2s;
-    box-shadow: 3px 3px 0px rgba(11,5,26,1);
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s;
+    box-shadow: 4px 4px 0px var(--dark);
     margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
 }
 
-.form-btn:hover  { transform: translate(-2px, -2px); box-shadow: 5px 5px 0px rgba(11,5,26,1); }
-.form-btn:active { transform: translate(0, 0); box-shadow: 1px 1px 0px rgba(11,5,26,1); }
-.form-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.form-btn:hover    { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--dark); }
+.form-btn:active   { transform: translate(1px, 1px);   box-shadow: 2px 2px 0px var(--dark); }
+.form-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: 4px 4px 0px var(--dark); }
 
 /* Message */
 .form-msg {

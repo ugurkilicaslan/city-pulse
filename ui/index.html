@@ -8,47 +8,185 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/ui/css/auth.css">
+    <style>
+        /* ─── Canvas starfield ─── */
+        #starfield {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            display: block;
+        }
+
+        /* ─── Hero ─── */
+        .hero {
+            position: relative;
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+            max-width: 720px;
+        }
+
+        /* ─── Unified button styles ─── */
+        .btn, .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Aldrich', sans-serif;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            padding: 0.75rem 1.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+            border: 2px solid var(--dark);
+        }
+
+        .btn-primary, .hero-btn-primary {
+            background: var(--primary);
+            color: var(--dark);
+            box-shadow: 4px 4px 0 var(--dark);
+        }
+
+        .btn-primary:hover, .hero-btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--dark);
+        }
+
+        .btn-primary:active, .hero-btn-primary:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .btn-secondary, .hero-btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 4px 4px 0 rgba(255,197,61,0.35);
+        }
+
+        .btn-secondary:hover, .hero-btn-secondary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(255,197,61,0.4);
+            background: rgba(255,197,61,0.07);
+        }
+
+        .btn-secondary:active, .hero-btn-secondary:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 rgba(255,197,61,0.3);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 0;
+        }
+
+        /* ─── Stats ─── */
+        .hero-stats {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 0; right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 3.5rem;
+            z-index: 1;
+        }
+
+        .hero-stat-val {
+            font-family: 'Aldrich', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            display: block;
+            line-height: 1;
+        }
+
+        .hero-stat-lbl {
+            font-size: 0.65rem;
+            color: var(--t3);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            font-size: 0.62rem;
+            color: var(--t3);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            animation: bounce 2.2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%       { transform: translateX(-50%) translateY(-7px); }
+        }
+
+        /* Features strip */
+        .hero-features {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-feature-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: var(--t2);
+            background: rgba(167,139,250,0.08);
+            border: 1px solid rgba(167,139,250,0.2);
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-family: 'Aldrich', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+    </style>
 </head>
 <body>
 
-<!-- ── Looping video background ── -->
-<div class="video-bg">
-    <iframe
-        src="https://www.youtube.com/embed/xNN7iTA57jM?autoplay=1&mute=1&loop=1&playlist=xNN7iTA57jM&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3"
-        frameborder="0"
-        allow="autoplay; encrypted-media"
-        title="bg"
-    ></iframe>
-    <div class="video-overlay"></div>
-</div>
+<!-- ── Canvas Starfield Background ── -->
+<canvas id="starfield"></canvas>
 
+<!-- ══════════════════ HERO ══════════════════ -->
 <section class="hero">
 
-    <!-- Animated geometric background -->
-    <div class="hero-bg">
-        <div class="geo-shapes">
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-            <div class="geo-shape"></div>
-        </div>
-    </div>
-
-    <!-- Main content -->
     <div class="hero-content">
 
         <!-- Logo -->
         <div class="hero-logo-wrap">
-            <div class="hero-logo-box">
-                <svg width="36" height="36" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z"
-                        fill="rgba(255,255,255,0.25)"/>
-                    <polyline
-                        points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
+            <div class="hero-logo-box" id="heroLogoBox">
+                <!-- Logo: /ui/images/logo.png varsa img, yoksa SVG fallback -->
+                <svg width="36" height="36" viewBox="0 0 26 26" fill="none">
+                    <path d="M2 22 L2 14 L5 14 L5 10 L8 10 L8 14 L10 14 L10 8 L13 8 L13 14 L15 14 L15 11 L18 11 L18 14 L21 14 L21 16 L24 16 L24 22 Z" fill="rgba(255,255,255,0.25)"/>
+                    <polyline points="2,17 5,17 7,12 10,22 13,15 16,15 18,19 21,13 24,17"
                         stroke="rgba(255,255,255,0.95)" stroke-width="1.8"
                         fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -56,29 +194,35 @@
             <span class="hero-logo-text">CITY <span>PULSE</span></span>
         </div>
 
-        <p class="hero-tagline">Real-time city intelligence platform</p>
+        <p class="hero-tagline">Real-time City Intelligence Platform</p>
 
         <h1 class="hero-title">
             Şehrin nabzını<br>
             <em>anlık</em> takip et
         </h1>
 
-        <p class="hero-sub">
-            Döviz kurları, dünya haberleri, oyun fırsatları, NASA'nın günün karesi ve GitHub trend projeleri — hepsi tek bir akıllı platformda.
-        </p>
+        <!-- Feature chips -->
+        <div class="hero-features">
+            <span class="hero-feature-chip">💱 Döviz Kurları</span>
+            <span class="hero-feature-chip">📰 Günün Haberleri</span>
+            <span class="hero-feature-chip">🎮 Oyun Fırsatları</span>
+            <span class="hero-feature-chip">🚀 NASA APOD</span>
+            <span class="hero-feature-chip">⭐ GitHub Trending</span>
+        </div>
 
+        <!-- CTAs -->
         <div class="hero-actions">
-            <a href="/ui/auth.html" class="hero-btn hero-btn-primary" id="heroLoginBtn">
-                🚀 Hemen Başla
+            <a href="/ui/auth.html" class="btn btn-primary" id="heroLoginBtn">
+                🚀 Dashboard'a Gir
             </a>
-            <a href="/ui/auth.html?tab=register" class="hero-btn hero-btn-secondary" id="heroRegisterBtn">
+            <a href="/ui/auth.html?tab=register" class="btn btn-secondary">
                 ✦ Kayıt Ol
             </a>
         </div>
 
     </div>
 
-    <!-- Bottom stats -->
+    <!-- Stats -->
     <div class="hero-stats">
         <div class="hero-stat">
             <span class="hero-stat-val">5+</span>
@@ -98,7 +242,10 @@
 
 </section>
 
+<script src="/ui/js/particles.js"></script>
 <script>
+    initStarfield('starfield', { count: 200, speed: 0.3, opacity: 0.85 });
+
     // Already logged in → go to dashboard
     (function() {
         const token = localStorage.getItem('cp_token');
@@ -106,8 +253,9 @@
         try {
             const p = JSON.parse(atob(token.split('.')[1]));
             if (p.exp * 1000 > Date.now()) {
-                document.getElementById('heroLoginBtn').href = '/ui/dashboard.html';
-                document.getElementById('heroLoginBtn').textContent = '🚀 Dashboard\'a Git';
+                const btn = document.getElementById('heroLoginBtn');
+                btn.href = '/ui/dashboard.html';
+                btn.innerHTML = '🚀 Dashboard\'a Git';
             }
         } catch(e) {}
     })();

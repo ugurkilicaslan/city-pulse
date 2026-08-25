@@ -10,16 +10,8 @@
 </head>
 <body class="auth-page">
 
-<!-- ── Video background ── -->
-<div class="video-bg">
-    <iframe
-        src="https://www.youtube.com/embed/xNN7iTA57jM?autoplay=1&mute=1&loop=1&playlist=xNN7iTA57jM&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3"
-        frameborder="0"
-        allow="autoplay; encrypted-media"
-        title="bg"
-    ></iframe>
-    <div class="video-overlay" style="background:rgba(28,12,43,0.88);"></div>
-</div>
+<!-- ── Canvas Starfield Background ── -->
+<canvas id="starfield" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;"></canvas>
 
 <!-- ── Navbar ───────────────────────────────────────────── -->
 <nav class="auth-nav">
@@ -166,9 +158,11 @@
 
 </div>
 
+<script src="/ui/js/particles.js"></script>
 <script src="/ui/js/auth.js"></script>
 <script>
-    // Check for ?tab=register URL parameter
+    initStarfield('starfield', { count: 150, speed: 0.25, opacity: 0.65 });
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'register') {
         switchTab('register');
