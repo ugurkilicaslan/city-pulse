@@ -1,4 +1,4 @@
-package routes
+﻿package routes
 
 import (
 	"net/http"
@@ -17,7 +17,7 @@ var localOrigins = []string{
 }
 
 var productionOriginSuffixes = []string{
-	".wiseupturkey.com",
+	".citypulse.com",
 	".istanbulum.app",
 	".antalyam.app",
 }

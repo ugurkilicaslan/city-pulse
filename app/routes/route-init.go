@@ -118,7 +118,7 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 	color.White("...")
 	fmt.Println(
 		color.GreenString("⚡"),
-		color.YellowString("WiseUP City Pulse Service Started"),
+		color.YellowString("City Pulse Service Started"),
 		color.GreenString("⚡"),
 	)
 	fmt.Println(color.CyanString("port:%d  base:%s", config.Config.ServerPort, config.Config.APIBasePath()))

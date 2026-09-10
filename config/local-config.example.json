@@ -1,14 +1,18 @@
 ﻿{
-  "env": "production",
+  "env": "local",
   "mongo": {
-    "uri": "MONGO_URI_BURAYA",
+    "uri": "mongodb://localhost:27017",
     "database": "city-pulse"
   },
   "gnews": {
     "apiKey": "YOUR_GNEWS_API_KEY"
   },
+  "nasa": {
+    "apiKey": "DEMO_KEY"
+  },
   "auth": {
-    "apiKey": "YOUR_PROD_API_KEY"
+    "apiKey": "local-dev-key",
+    "jwtSecret": "your-super-secret-jwt-key"
   },
   "server": {
     "port": 3649,
