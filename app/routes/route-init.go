@@ -1,4 +1,4 @@
-package routes
+﻿package routes
 
 import (
 	"context"
@@ -68,7 +68,7 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 	bookmarkSvc := services.NewBookmarkService(bookmarkDAO)
 	alertSvc := services.NewAlertService(alertDAO)
 
-	h := handlers.New(exchangeSvc, newsSvc, gameSvc, citySvc, userSvc, weatherSvc, cryptoSvc, analyticsSvc, prefSvc, bookmarkSvc, alertSvc, ctx)
+	h := handlers.New(exchangeSvc, newsSvc, gameSvc, citySvc, userSvc, weatherSvc, cryptoSvc, analyticsSvc, prefSvc, bookmarkSvc, alertSvc, nasaSvc, githubSvc, ctx)
 
 	api := r.Group(config.Config.APIBasePath())
 	api.GET("/health", h.Healthz)
@@ -93,6 +93,9 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 		protected.GET("/weather/current", h.WeatherCurrent)
 		protected.GET("/crypto/prices", h.CryptoPrices)
 
+		protected.GET("/nasa/apod", h.NasaApod)
+		protected.GET("/github/trending", h.GithubTrending)
+
 		protected.GET("/me", h.MeProfile)
 		protected.GET("/me/preferences", h.MePreferences)
 		protected.PUT("/me/preferences", h.MeUpdatePreferences)
@@ -101,15 +104,22 @@ func InitializeRoutes(db *mongo.Database, ctx context.Context) {
 		protected.GET("/me/bookmarks", h.BookmarkList)
 		protected.POST("/me/bookmarks", h.BookmarkCreate)
 		protected.DELETE("/me/bookmarks/:id", h.BookmarkDelete)
+
+		protected.GET("/me/alerts", h.AlertList)
+		protected.POST("/me/alerts", h.AlertCreate)
+		protected.DELETE("/me/alerts/:id", h.AlertDelete)
+
+		protected.POST("/analytics/track", h.TrackEvent)
+		protected.GET("/analytics/summary", h.AnalyticsSummary)
 	}
 
 	fmt.Println()
 	fmt.Println()
 	color.White("...")
 	fmt.Println(
-		color.GreenString("√"),
+		color.GreenString("⚡"),
 		color.YellowString("WiseUP City Pulse Service Started"),
-		color.GreenString("√"),
+		color.GreenString("⚡"),
 	)
 	fmt.Println(color.CyanString("port:%d  base:%s", config.Config.ServerPort, config.Config.APIBasePath()))
 

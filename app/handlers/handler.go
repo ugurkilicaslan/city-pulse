@@ -1,4 +1,4 @@
-package handlers
+﻿package handlers
 
 import (
 	"context"
@@ -18,6 +18,8 @@ type Handler struct {
 	prefSvc      *services.PreferenceService
 	bookmarkSvc  *services.BookmarkService
 	alertSvc     *services.AlertService
+	nasaSvc      *services.NasaService
+	githubSvc    *services.GithubService
 	ctx          context.Context
 }
 
@@ -33,6 +35,8 @@ func New(
 	prefSvc *services.PreferenceService,
 	bookmarkSvc *services.BookmarkService,
 	alertSvc *services.AlertService,
+	nasaSvc *services.NasaService,
+	githubSvc *services.GithubService,
 	ctx context.Context,
 ) *Handler {
 	return &Handler{
@@ -47,6 +51,8 @@ func New(
 		prefSvc:      prefSvc,
 		bookmarkSvc:  bookmarkSvc,
 		alertSvc:     alertSvc,
+		nasaSvc:      nasaSvc,
+		githubSvc:    githubSvc,
 		ctx:          ctx,
 	}
 }

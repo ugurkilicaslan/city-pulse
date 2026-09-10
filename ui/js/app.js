@@ -1,18 +1,46 @@
-const BASE = 'http://localhost:3649/api/1.0';
+﻿const BASE = 'http://localhost:3649/api/1.0';
 
-/* ─── API helper ─── */
-async function api(path) {
+/* ─── API Helper ─── */
+async function api(path, options = {}) {
     const token = localStorage.getItem('cp_token');
-    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-    const r = await fetch(BASE + path, { headers });
-    if (r.status === 401) {
-        localStorage.removeItem('cp_token');
-        localStorage.removeItem('cp_user');
-        window.location.href = '/ui/auth.html';
-        return;
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+        ...(options.headers || {})
+    };
+
+    try {
+        const r = await fetch(BASE + path, { ...options, headers });
+        if (r.status === 401) {
+            localStorage.removeItem('cp_token');
+            localStorage.removeItem('cp_user');
+            window.location.href = '/ui/auth.html';
+            return null;
+        }
+        if (!r.ok) {
+            const errData = await r.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${r.status}`);
+        }
+        return await r.json();
+    } catch (err) {
+        console.error('API Hatası:', path, err);
+        throw err;
     }
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
+}
+
+/* ─── Analytics Tracker ─── */
+function trackEvent(type, section = '', metadata = {}) {
+    try {
+        api('/analytics/track', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: type,
+                page: window.location.pathname,
+                section: section,
+                metadata: metadata
+            })
+        }).catch(() => {});
+    } catch(e) {}
 }
 
 /* ─── Helpers ─── */
@@ -45,29 +73,33 @@ let currentSection = 'exchange';
 let cachedData = null;
 let currentCity = 'istanbul';
 let currentLang = 'tr';
+let currentBookmarkFilter = 'all';
+let cachedBookmarks = [];
 
 /* ─── Navigation ─── */
 function navigateTo(sectionId) {
-    // Hide all sections
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('section-' + sectionId);
     if (target) target.classList.remove('hidden');
 
-    // Update tabs
     document.querySelectorAll('.nav-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.section === sectionId);
     });
 
-    // Show/hide city+lang controls (only relevant for exchange+news)
-    const hasCtrl = ['exchange', 'news'].includes(sectionId);
+    const hasCtrl = ['exchange', 'news', 'weather'].includes(sectionId);
     const ctrl = document.getElementById('ctrlGroup');
     if (ctrl) ctrl.style.display = hasCtrl ? 'flex' : 'none';
 
     currentSection = sectionId;
     window.location.hash = sectionId;
 
-    // Render with cached data if available
-    if (cachedData) {
+    trackEvent('section_view', sectionId);
+
+    if (sectionId === 'bookmarks') {
+        loadBookmarks();
+    } else if (sectionId === 'alerts') {
+        loadAlerts();
+    } else if (cachedData) {
         renderSection(sectionId, cachedData);
     }
 }
@@ -75,16 +107,18 @@ function navigateTo(sectionId) {
 function onContextChange() {
     currentCity = document.getElementById('citySelect').value;
     currentLang = document.getElementById('langSelect').value;
-    cachedData = null; // invalidate cache
+    cachedData = null;
     loadSnapshot();
 }
 
 function refresh() {
     cachedData = null;
+    trackEvent('data_refresh', currentSection);
     loadSnapshot();
+    if (currentSection === 'bookmarks') loadBookmarks();
+    if (currentSection === 'alerts') loadAlerts();
 }
 
-/* ─── Loading state ─── */
 function setLoading(on) {
     const btn = document.getElementById('refreshBtn');
     if (!btn) return;
@@ -93,7 +127,7 @@ function setLoading(on) {
     if (ico) ico.style.animation = on ? 'spin .7s linear infinite' : '';
 }
 
-/* ─── Main data load ─── */
+/* ─── Main Data Load ─── */
 async function loadSnapshot() {
     setLoading(true);
     const city = document.getElementById('citySelect')?.value || currentCity;
@@ -117,28 +151,27 @@ async function loadSnapshot() {
 
         cachedData = { ...snap, weather, crypto };
         const pt = document.getElementById('pageTime');
-        if (pt) pt.textContent = '🕐 ' + new Date().toLocaleTimeString('tr-TR');
+        if (pt) pt.textContent = '⏱ ' + new Date().toLocaleTimeString('tr-TR');
 
         renderSection(currentSection, cachedData);
 
-    } catch(e) {
-        console.error(e);
-        showError(`Servise ulaşılamıyor: ${e.message}`);
+    } catch (err) {
+        showError(err.message);
     } finally {
         setLoading(false);
     }
 }
 
-/* ─── Section router ─── */
-function renderSection(section, snap) {
-    switch(section) {
-        case 'exchange': renderExchange(snap.exchange); break;
-        case 'news':     renderNews(snap.news); break;
-        case 'games':    renderGames(snap.gameDeals); break;
-        case 'nasa':     renderNasa(snap.nasaApod); break;
-        case 'github':   renderGithub(snap.githubTrend); break;
-        case 'weather':  renderWeather(snap.weather); break;
-        case 'crypto':   renderCrypto(snap.crypto); break;
+function renderSection(sec, data) {
+    if (!data) return;
+    switch (sec) {
+        case 'exchange': renderExchange(data.exchange); break;
+        case 'news':     renderNews(data.news);         break;
+        case 'games':    renderGames(data.games);       break;
+        case 'nasa':     renderNasa(data.nasa);         break;
+        case 'github':   renderGithub(data.github);     break;
+        case 'weather':  renderWeather(data.weather);   break;
+        case 'crypto':   renderCrypto(data.crypto);     break;
     }
 }
 
@@ -146,76 +179,72 @@ function renderSection(section, snap) {
 function renderExchange(ex) {
     const el = document.getElementById('xgrid');
     if (!el) return;
-    if (!ex) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">💱</span>Döviz verisi alınamadı</div>';
+    if (!ex || !ex.rates || !ex.rates.length) {
+        el.innerHTML = '<div class="empty">Döviz verisi bulunamadı</div>';
         return;
     }
-    const r = ex.rates || {};
-    const cards = [
-        { flag:'🇺🇸', pair:'USD / TRY', desc:'1 Dolar = kaç TL',    v: r.TRY },
-        { flag:'🇪🇺', pair:'EUR / TRY', desc:'1 Euro = kaç TL',     v: r.TRY && r.EUR ? r.TRY / r.EUR : null },
-        { flag:'🇨🇭', pair:'CHF / TRY', desc:'1 Frank = kaç TL',    v: r.TRY && r.CHF ? r.TRY / r.CHF : null },
-        { flag:'🇬🇧', pair:'GBP / TRY', desc:'1 Sterlin = kaç TL',  v: r.TRY && r.GBP ? r.TRY / r.GBP : null },
-        { flag:'🇯🇵', pair:'JPY / TRY', desc:'100 Yen = kaç TL',    v: r.TRY && r.JPY ? (r.TRY / r.JPY) * 100 : null },
-        { flag:'⚖️',  pair:'EUR / USD', desc:'1 Euro = kaç Dolar',  v: r.EUR ? 1 / r.EUR : null },
-        { flag:'🪙',  pair:'XAU / USD', desc:'Altın (ons)',          v: r.XAU ? 1 / r.XAU : null },
-        { flag:'💎',  pair:'BTC / USD', desc:'1 Bitcoin kaç Dolar',  v: r.BTC ? 1 / r.BTC : null },
-    ];
-    el.innerHTML = cards.map(c => `
+    el.innerHTML = ex.rates.map(r => `
         <div class="xcard">
-            <div class="xcard-pair">${c.flag} ${c.pair}</div>
-            <div class="xcard-rate">${c.v ? c.v.toFixed(c.pair.includes('JPY') ? 2 : 4) : '—'}</div>
-            <div class="xcard-desc">${c.desc}</div>
-            <div class="xcard-date">📅 ${ex.date || ''}</div>
+            <div class="xcard-pair">${r.pair}</div>
+            <div class="xcard-rate">${r.rate ? r.rate.toFixed(4) : '—'}</div>
+            <div class="xcard-sub">Baz: ${ex.base || 'TRY'}</div>
         </div>`).join('');
 }
 
 /* ─── Render: News ─── */
-function renderNews(articles) {
+function renderNews(news) {
     const el = document.getElementById('nlist');
+    const badge = document.getElementById('newsBadge');
+    if (badge) badge.textContent = (news && news.articles) ? `${news.articles.length} Haber` : '';
     if (!el) return;
-    if (!articles || !articles.length) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">📭</span>Haber bulunamadı</div>';
+    if (!news || !news.articles || !news.articles.length) {
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Haber bulunamadı</div>';
         return;
     }
-    const badge = document.getElementById('newsBadge');
-    if (badge) badge.textContent = articles.length + ' haber';
-
-    el.innerHTML = articles.map(a => `
-        <a class="ncard-full" href="${a.url||'#'}" target="_blank" rel="noopener">
-            ${a.image ? `<img class="ncard-full-img" src="${a.image}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
-            <div class="ncard-full-body">
-                <div class="ncard-full-title">${a.title||''}</div>
-                <div class="ncard-full-meta">
-                    <span class="nsource">${a.source?.name||'Kaynak'}</span>
-                    <div class="ndot"></div>
-                    <span class="ntime">${relTime(a.publishedAt)}</span>
+    el.innerHTML = news.articles.map(a => `
+        <div class="news-card">
+            ${a.image ? `<img class="news-img" src="${a.image}" alt="" onerror="this.style.display='none'">` : ''}
+            <div class="news-body">
+                <div class="news-src">${a.source || ''} • ${relTime(a.publishedAt)}</div>
+                <div class="news-title">${a.title || ''}</div>
+                <div class="news-desc">${a.description || ''}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.8rem;">
+                    <a class="news-link" href="${a.url}" target="_blank" rel="noopener">Haberi Oku →</a>
+                    <button class="bookmark-btn" onclick="saveBookmark('news', '${encodeURIComponent(a.title || '')}', '${encodeURIComponent(a.url || '')}', '${encodeURIComponent(a.source || '')}')">
+                        ★ Kaydet
+                    </button>
                 </div>
             </div>
-        </a>`).join('');
+        </div>`).join('');
 }
 
 /* ─── Render: Games ─── */
-function renderGames(deals) {
+function renderGames(games) {
     const el = document.getElementById('glist');
+    const badge = document.getElementById('gamesBadge');
+    if (badge) badge.textContent = (games && games.deals) ? `${games.deals.length} Fırsat` : '';
     if (!el) return;
-    if (!deals || !deals.length) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">🎮</span>Şu an fırsat bulunamadı</div>';
+    if (!games || !games.deals || !games.deals.length) {
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Oyun fırsatı bulunamadı</div>';
         return;
     }
-    const badge = document.getElementById('gamesBadge');
-    if (badge) badge.textContent = deals.length + ' fırsat';
-
-    el.innerHTML = deals.map(d => `
-        <div class="gcard">
-            ${d.thumb ? `<img class="gimg" src="${d.thumb}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:0.8rem;background:var(--bg2);">` : ''}
-            <div class="gtitle" style="font-size:.9rem;font-weight:600;margin-bottom:0.5rem;">${d.title||'—'}</div>
-            <div class="gprices">
-                <span class="gprice-s">$${parseFloat(d.salePrice||0).toFixed(2)}</span>
-                ${d.normalPrice ? `<span class="gprice-o">$${parseFloat(d.normalPrice).toFixed(2)}</span>` : ''}
-                ${d.savingsPercent ? `<span class="gsave">${pct(d.savingsPercent)}</span>` : ''}
+    el.innerHTML = games.deals.map(g => `
+        <div class="game-card">
+            ${g.thumb ? `<img class="game-thumb" src="${g.thumb}" alt="" onerror="this.style.display='none'">` : ''}
+            <div class="game-body">
+                <div class="game-title">${g.title || ''}</div>
+                <div class="game-prices">
+                    <span class="game-sale">$${g.salePrice || '0'}</span>
+                    ${g.normalPrice ? `<span class="game-norm">$${g.normalPrice}</span>` : ''}
+                    ${g.savings ? `<span class="game-savings">${pct(g.savings)}</span>` : ''}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.6rem;">
+                    <a class="game-deal-link" href="https://www.cheapshark.com/redirect?dealID=${g.dealID}" target="_blank" rel="noopener">Fırsata Git →</a>
+                    <button class="bookmark-btn" onclick="saveBookmark('game', '${encodeURIComponent(g.title || '')}', 'https://www.cheapshark.com/redirect?dealID=${g.dealID}', '${encodeURIComponent(g.salePrice || '')}')">
+                        ★ Kaydet
+                    </button>
+                </div>
             </div>
-            ${d.steamRating ? `<div class="grating" style="margin-top:0.4rem;">⭐ ${d.steamRating}</div>` : ''}
         </div>`).join('');
 }
 
@@ -223,15 +252,15 @@ function renderGames(deals) {
 function renderNasa(apod) {
     const el = document.getElementById('nasaContent');
     if (!el) return;
-    if (!apod) {
-        el.innerHTML = '<div class="empty"><span class="empty-ico">🌌</span>NASA verisi alınamadı.<br>API anahtarı geçerli mi?</div>';
+    if (!apod || !apod.url) {
+        el.innerHTML = '<div class="empty">NASA verisi alınamadı</div>';
         return;
     }
 
     const isVideo = apod.mediaType === 'video';
     const mediaHtml = isVideo
-        ? `<iframe src="${apod.url}" style="width:100%;height:100%;min-height:450px;border:none;" allowfullscreen></iframe>`
-        : `<img src="${apod.url}" alt="${apod.title}" style="width:100%;height:100%;max-height:75vh;object-fit:contain;" loading="lazy">`;
+        ? `<iframe class="nasa-video" src="${apod.url}" frameborder="0" allowfullscreen></iframe>`
+        : `<img class="nasa-img" src="${apod.hdUrl || apod.url}" alt="${apod.title||''}" loading="lazy">`;
 
     el.innerHTML = `
         <div class="nasa-page">
@@ -239,15 +268,17 @@ function renderNasa(apod) {
             <div class="nasa-info">
                 <div class="nasa-badge">🚀 Astronomy Picture of the Day</div>
                 <h2 class="nasa-title">${apod.title||''}</h2>
-                <div class="nasa-date">🗓️ ${apod.date||''}</div>
+                <div class="nasa-date">📅 ${apod.date||''}</div>
                 <p class="nasa-desc">${apod.explanation||''}</p>
-                ${apod.copyright ? `<div class="nasa-credit">📷 © ${apod.copyright}</div>` : ''}
-                <a href="${apod.url}" target="_blank" rel="noopener"
-                   style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;background:var(--primary);color:var(--dark);font-family:'Aldrich',sans-serif;font-size:.75rem;text-transform:uppercase;text-decoration:none;border-radius:7px;border:2px solid var(--dark);box-shadow:2px 2px 0 var(--dark);transition:transform .15s,box-shadow .15s;font-weight:bold;"
-                   onmouseover="this.style.transform='translate(-2px,-2px)';this.style.boxShadow='4px 4px 0 var(--dark)'"
-                   onmouseout="this.style.transform='';this.style.boxShadow='2px 2px 0 var(--dark)'">
-                   🔗 Tam Boyut Görüntüle
-                </a>
+                <div style="display:flex; gap:1rem; align-items:center; margin-top:1rem;">
+                    <a href="${apod.url}" target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;background:var(--primary);color:var(--dark);font-family:'Aldrich',sans-serif;font-size:.75rem;text-transform:uppercase;text-decoration:none;border-radius:7px;border:2px solid var(--dark);box-shadow:2px 2px 0 var(--dark);font-weight:bold;">
+                       🔍 Tam Boyut Görüntüle
+                    </a>
+                    <button class="bookmark-btn" style="padding:0.6rem 1.2rem; font-size:0.75rem;" onclick="saveBookmark('other', '${encodeURIComponent(apod.title || 'NASA APOD')}', '${encodeURIComponent(apod.url)}', '${encodeURIComponent(apod.date)}')">
+                        ★ Favorilere Ekle
+                    </button>
+                </div>
             </div>
         </div>`;
 }
@@ -257,7 +288,7 @@ function renderGithub(repos) {
     const el = document.getElementById('ghgrid');
     if (!el) return;
     if (!repos || !repos.length) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">🐙</span>Repo bulunamadı</div>';
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Repo bulunamadı</div>';
         return;
     }
     el.innerHTML = repos.map(r => `
@@ -273,10 +304,11 @@ function renderGithub(repos) {
                     <span class="gh-lang-dot" style="background:${getLangColor(r.language)};"></span>
                     <span>${r.language}</span>
                 </div>` : ''}
-                <span class="gh-stars">⭐ ${(r.stars||0).toLocaleString()}</span>
+                <span class="gh-stars">★ ${(r.stars||0).toLocaleString()}</span>
             </div>
         </a>`).join('');
 }
+
 /* ─── Render: Weather ─── */
 function renderWeather(w) {
     const el = document.getElementById('weatherContent');
@@ -284,7 +316,7 @@ function renderWeather(w) {
     if (cityLbl && w) cityLbl.textContent = w.city || 'Şehir';
     if (!el) return;
     if (!w || w.error) {
-        el.innerHTML = '<div class="empty"><span class="empty-ico">🌧️</span>Hava durumu alınamadı</div>';
+        el.innerHTML = '<div class="empty">Hava durumu alınamadı</div>';
         return;
     }
     
@@ -299,7 +331,7 @@ function renderWeather(w) {
                     <div style="font-size:1rem; color:var(--t1); font-weight:bold;">${w.windSpeed} km/s</div>
                 </div>
                 <div>
-                    <div style="font-size:0.75rem; color:var(--t3); text-transform:uppercase; margin-bottom:0.3rem;">Gündüz/Gece</div>
+                    <div style="font-size:0.75rem; color:var(--t3); text-transform:uppercase; margin-bottom:0.3rem;">Vakit</div>
                     <div style="font-size:1rem; color:var(--t1); font-weight:bold;">${w.isDay ? 'Gündüz ☀️' : 'Gece 🌙'}</div>
                 </div>
             </div>
@@ -311,7 +343,7 @@ function renderCrypto(data) {
     const el = document.getElementById('cryptolist');
     if (!el) return;
     if (!data || !data.coins || !data.coins.length) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="empty-ico">📉</span>Kripto verisi alınamadı</div>';
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Kripto verisi alınamadı</div>';
         return;
     }
     
@@ -320,15 +352,16 @@ function renderCrypto(data) {
         const clr = isUp ? 'var(--mint)' : '#fb7185';
         const sign = isUp ? '+' : '';
         return `
-        <div style="background:var(--card); border:1px solid var(--bdr); border-radius:10px; padding:1.2rem; display:flex; flex-direction:column; gap:0.8rem; transition:transform 0.15s, box-shadow 0.2s; border-left:4px solid var(--primary);" 
-             onmouseover="this.style.transform='translate(-2px,-2px)'; this.style.boxShadow='4px 4px 0 rgba(11,5,26,0.4)'"
-             onmouseout="this.style.transform=''; this.style.boxShadow='none'">
+        <div style="background:var(--card); border:1px solid var(--bdr); border-radius:10px; padding:1.2rem; display:flex; flex-direction:column; gap:0.8rem; border-left:4px solid var(--primary);">
             <div style="display:flex; align-items:center; gap:0.8rem;">
                 <img src="${c.logoUrl}" style="width:32px; height:32px; border-radius:50%; background:#fff; padding:2px;">
                 <div style="flex:1;">
                     <div style="font-family:'Aldrich',sans-serif; font-size:1rem; color:var(--t1); font-weight:bold;">${c.name}</div>
                     <div style="font-size:0.7rem; color:var(--t3); text-transform:uppercase;">${c.symbol}</div>
                 </div>
+                <button class="bookmark-btn" onclick="saveBookmark('crypto', '${encodeURIComponent(c.name)}', 'https://coingecko.com', '$${c.priceUsd}')">
+                    ★
+                </button>
             </div>
             <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-top:0.5rem;">
                 <div style="font-family:'Aldrich',sans-serif; font-size:1.4rem; font-weight:bold; color:var(--t1);">$${c.priceUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
@@ -337,37 +370,270 @@ function renderCrypto(data) {
         </div>`;
     }).join('');
 }
+
+/* ─── Bookmarks (Favoriler) ─── */
+async function saveBookmark(type, encodedTitle, encodedUrl, extra) {
+    const title = decodeURIComponent(encodedTitle);
+    const url = decodeURIComponent(encodedUrl);
+    try {
+        await api('/me/bookmarks', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: type,
+                title: title,
+                url: url,
+                metadata: { extra: decodeURIComponent(extra || '') }
+            })
+        });
+        trackEvent('bookmark_add', type, { title });
+        alert(`"${title}" başarıyla favorilere eklendi!`);
+    } catch (err) {
+        alert('Favori eklenirken hata: ' + err.message);
+    }
+}
+
+async function loadBookmarks(filter = currentBookmarkFilter) {
+    currentBookmarkFilter = filter;
+    const el = document.getElementById('bookmarkList');
+    const badge = document.getElementById('bookmarkCountBadge');
+    if (!el) return;
+    el.innerHTML = '<div class="sk sk-c" style="grid-column:1/-1;"></div>';
+
+    try {
+        const query = filter && filter !== 'all' ? `?type=${filter}` : '';
+        const res = await api(`/me/bookmarks${query}`);
+        cachedBookmarks = res.bookmarks || [];
+        if (badge) badge.textContent = `${cachedBookmarks.length} Kayıt`;
+
+        if (!cachedBookmarks.length) {
+            el.innerHTML = '<div class="empty" style="grid-column:1/-1;">Henüz kaydedilmiş yer iminiz yok. Haber, oyun veya kripto kartlarındaki "★ Kaydet" butonunu kullanarak ekleyebilirsiniz.</div>';
+            return;
+        }
+
+        el.innerHTML = cachedBookmarks.map(b => `
+            <div class="news-card" style="border-left:3px solid var(--primary);">
+                <div class="news-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="col-badge" style="text-transform:uppercase;">${b.type}</span>
+                        <button onclick="deleteBookmark('${b.id}')" style="background:rgba(255,0,0,0.2); color:#ff6b6b; border:1px solid rgba(255,0,0,0.4); border-radius:6px; padding:0.2rem 0.5rem; font-size:0.75rem; cursor:pointer;">
+                            Sil ✕
+                        </button>
+                    </div>
+                    <div class="news-title" style="font-size:1rem;">${b.title}</div>
+                    <div style="margin-top:1rem;">
+                        <a class="news-link" href="${b.url}" target="_blank" rel="noopener">Kaynağa Git →</a>
+                    </div>
+                </div>
+            </div>`).join('');
+    } catch (err) {
+        el.innerHTML = `<div class="empty" style="grid-column:1/-1;">Yer imleri yüklenemedi: ${err.message}</div>`;
+    }
+}
+
+function filterBookmarks(filter, btn) {
+    if (btn) {
+        btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    loadBookmarks(filter);
+}
+
+async function deleteBookmark(id) {
+    if (!confirm('Bu yer imini silmek istediğinize emin misiniz?')) return;
+    try {
+        await api(`/me/bookmarks/${id}`, { method: 'DELETE' });
+        loadBookmarks();
+    } catch (err) {
+        alert('Silme hatası: ' + err.message);
+    }
+}
+
+/* ─── Price Alerts (Fiyat Alarmları) ─── */
+async function loadAlerts() {
+    const el = document.getElementById('alertsList');
+    const badge = document.getElementById('alertCountBadge');
+    if (!el) return;
+    el.innerHTML = '<div class="sk sk-x" style="grid-column:1/-1;"></div>';
+
+    try {
+        const res = await api('/me/alerts');
+        const alerts = res.alerts || [];
+        if (badge) badge.textContent = `${alerts.length} Alarm`;
+
+        if (!alerts.length) {
+            el.innerHTML = '<div class="empty" style="grid-column:1/-1;">Henüz kurulmuş fiyat alarmınız bulunmuyor.</div>';
+            return;
+        }
+
+        el.innerHTML = alerts.map(a => `
+            <div style="background:var(--card); border:1px solid var(--bdr); border-radius:10px; padding:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-family:'Aldrich',sans-serif; font-size:1.1rem; color:var(--primary); font-weight:bold;">${a.pair}</div>
+                    <div style="font-size:0.85rem; color:var(--t2); margin-top:0.2rem;">
+                        Hedef: <strong>${a.condition === 'above' ? '≥' : '≤'} ${a.targetRate}</strong>
+                    </div>
+                    ${a.note ? `<div style="font-size:0.75rem; color:var(--t3); margin-top:0.3rem;">Not: ${a.note}</div>` : ''}
+                    <div style="font-size:0.72rem; color:${a.triggered ? '#fb7185' : 'var(--mint)'}; margin-top:0.4rem;">
+                        ${a.triggered ? '● Tetiklendi' : '● Aktif Takipte'}
+                    </div>
+                </div>
+                <button onclick="deleteAlert('${a.id}')" style="background:rgba(255,0,0,0.2); color:#ff6b6b; border:1px solid rgba(255,0,0,0.4); border-radius:6px; padding:0.4rem 0.8rem; font-size:0.8rem; cursor:pointer;">
+                    Sil ✕
+                </button>
+            </div>`).join('');
+    } catch (err) {
+        el.innerHTML = `<div class="empty" style="grid-column:1/-1;">Alarmlar yüklenemedi: ${err.message}</div>`;
+    }
+}
+
+async function handleCreateAlert(e) {
+    if (e) e.preventDefault();
+    const pair = document.getElementById('alertPair').value;
+    const condition = document.getElementById('alertCondition').value;
+    const targetRate = parseFloat(document.getElementById('alertTargetRate').value);
+    const note = document.getElementById('alertNote').value.trim();
+
+    if (!targetRate || isNaN(targetRate)) {
+        alert('Lütfen geçerli bir hedef fiyat girin.');
+        return;
+    }
+
+    try {
+        await api('/me/alerts', {
+            method: 'POST',
+            body: JSON.stringify({ pair, condition, targetRate, note })
+        });
+        trackEvent('alert_create', 'alerts', { pair, targetRate });
+        document.getElementById('alertTargetRate').value = '';
+        document.getElementById('alertNote').value = '';
+        loadAlerts();
+    } catch (err) {
+        alert('Alarm kurulamadı: ' + err.message);
+    }
+}
+
+async function deleteAlert(id) {
+    if (!confirm('Bu alarmı silmek istediğinize emin misiniz?')) return;
+    try {
+        await api(`/me/alerts/${id}`, { method: 'DELETE' });
+        loadAlerts();
+    } catch (err) {
+        alert('Silme hatası: ' + err.message);
+    }
+}
+
+/* ─── Profile & Preferences ─── */
+async function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+
+    try {
+        const res = await api('/me');
+        if (res) {
+            document.getElementById('profUsername').textContent = res.username || '-';
+            document.getElementById('profEmail').textContent = res.email || '-';
+            document.getElementById('profBookmarkCount').textContent = res.bookmark_count != null ? res.bookmark_count : '0';
+            if (res.preferences) {
+                if (res.preferences.defaultCity) document.getElementById('prefDefaultCity').value = res.preferences.defaultCity;
+                if (res.preferences.defaultLang) document.getElementById('prefDefaultLang').value = res.preferences.defaultLang;
+            }
+        }
+    } catch(e) {
+        console.error('Profil yükleme hatası:', e);
+    }
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+    const msgEl = document.getElementById('prefMsg');
+    if (msgEl) msgEl.textContent = '';
+}
+
+async function handleSavePreferences(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const defaultCity = document.getElementById('prefDefaultCity').value;
+    const defaultLang = document.getElementById('prefDefaultLang').value;
+    const msgEl = document.getElementById('prefMsg');
+
+    try {
+        await api('/me/preferences', {
+            method: 'PUT',
+            body: JSON.stringify({ defaultCity, defaultLang })
+        });
+        if (msgEl) {
+            msgEl.textContent = 'Tercihleriniz başarıyla güncellendi!';
+            msgEl.style.color = 'var(--mint)';
+        }
+        const citySelect = document.getElementById('citySelect');
+        if (citySelect && defaultCity) {
+            citySelect.value = defaultCity;
+            onContextChange();
+        }
+        setTimeout(() => closeProfileModal(), 900);
+    } catch (err) {
+        if (msgEl) {
+            msgEl.textContent = 'Hata: ' + err.message;
+            msgEl.style.color = '#fb7185';
+        }
+    }
+    return false;
+}
+
+async function handleResetPreferences() {
+    if (!confirm('Tercihlerinizi sıfırlamak istiyor musunuz?')) return;
+    try {
+        await api('/me/preferences', { method: 'DELETE' });
+        openProfileModal();
+    } catch(e) {}
+}
+
 /* ─── Error state ─── */
 function showError(msg) {
     const el = document.getElementById('xgrid');
     if (el) el.innerHTML = `
         <div class="empty" style="grid-column:1/-1">
-            <span class="empty-ico">⚡</span>
+            <span class="empty-ico">⚠️</span>
             <strong>Bağlantı hatası</strong>
             <code>${msg}</code>
             Servis çalışıyor mu? → <code>go run ./main.go --dev</code>
         </div>`;
 }
 
+/* ─── Global Exports for Inline HTML Handlers ─── */
+window.openProfileModal = openProfileModal;
+window.closeProfileModal = closeProfileModal;
+window.handleSavePreferences = handleSavePreferences;
+window.handleResetPreferences = handleResetPreferences;
+window.saveBookmark = saveBookmark;
+window.deleteBookmark = deleteBookmark;
+window.filterBookmarks = filterBookmarks;
+window.handleCreateAlert = handleCreateAlert;
+window.deleteAlert = deleteAlert;
+window.navigateTo = navigateTo;
+window.onContextChange = onContextChange;
+window.refresh = refresh;
+
 /* ─── Init ─── */
 document.addEventListener('DOMContentLoaded', () => {
-    // Read hash for initial section
+    const user = JSON.parse(localStorage.getItem('cp_user') || '{}');
+    const elUser = document.getElementById('navUser');
+    if (elUser && user.username) {
+        elUser.innerHTML = `👤 <span>${user.username}</span>`;
+    }
+
     const hash = window.location.hash.replace('#', '') || 'exchange';
-    const validSections = ['exchange', 'news', 'games', 'nasa', 'github', 'weather', 'crypto'];
+    const validSections = ['exchange', 'news', 'games', 'nasa', 'github', 'weather', 'crypto', 'bookmarks', 'alerts'];
     const initSection = validSections.includes(hash) ? hash : 'exchange';
 
-    // Navigate without triggering data load yet
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    const target = document.getElementById('section-' + initSection);
-    if (target) target.classList.remove('hidden');
-    document.querySelectorAll('.nav-tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.section === initSection);
-    });
-    currentSection = initSection;
-    const hasCtrl = ['exchange', 'news'].includes(initSection);
-    const ctrl = document.getElementById('ctrlGroup');
-    if (ctrl) ctrl.style.display = hasCtrl ? 'flex' : 'none';
-
-    // Load data
+    navigateTo(initSection);
     loadSnapshot();
 });

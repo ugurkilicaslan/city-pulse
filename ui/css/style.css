@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     /* Dark Purple Theme */
     --bg:      #1c0c2b; /* Koyu Mor (resimdeki) */
     --bg2:     #241036; /* Biraz daha açık mor */
@@ -43,7 +43,22 @@ body {
     display: flex;
     align-items: center;
     gap: 0.2rem;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+#starfield {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+    display: block !important;
 }
 
 .nav-tab {
@@ -113,7 +128,8 @@ body {
 
 /* ─── Section system ─── */
 .section { display: block; }
-.section.hidden { display: none; }
+.hidden { display: none !important; }
+.section.hidden { display: none !important; }
 
 /* ─── NASA dedicated page ─── */
 .nasa-page {

@@ -1,58 +1,133 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — City Pulse</title>
+    <title>City Pulse — Dashboard</title>
     <link rel="icon" type="image/png" href="/ui/images/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/ui/css/style.css">
+    
+    <!-- Auth Guard -->
+    <script>
+        (function() {
+            const token = localStorage.getItem('cp_token');
+            if (!token) {
+                window.location.href = '/ui/auth.html';
+                return;
+            }
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.exp * 1000 <= Date.now()) {
+                    localStorage.removeItem('cp_token');
+                    localStorage.removeItem('cp_user');
+                    window.location.href = '/ui/auth.html';
+                }
+            } catch(e) {
+                localStorage.removeItem('cp_token');
+                localStorage.removeItem('cp_user');
+                window.location.href = '/ui/auth.html';
+            }
+        })();
+    </script>
+
+    <style>
+        .hidden {
+            display: none !important;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.hidden {
+            display: none !important;
+        }
+        .modal-card {
+            background: var(--card);
+            border: 2px solid var(--bdr-a);
+            border-radius: 14px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .bookmark-btn {
+            background: rgba(255, 197, 61, 0.12);
+            border: 1px solid rgba(255, 197, 61, 0.35);
+            color: var(--primary);
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-family: 'Aldrich', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .bookmark-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+            transform: translateY(-1px);
+        }
+        .alert-form-card {
+            background: var(--card);
+            border: 1px solid var(--bdr);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .alert-input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--bdr);
+            color: var(--t1);
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .alert-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+    </style>
 </head>
 <body>
 
-<!-- ── Auth guard (immediate redirect if no token) ── -->
-<script>
-(function() {
-    const token = localStorage.getItem('cp_token');
-    if (!token) { window.location.href = '/ui/auth.html'; return; }
-    try {
-        const p = JSON.parse(atob(token.split('.')[1]));
-        if (p.exp * 1000 < Date.now()) {
-            localStorage.removeItem('cp_token');
-            localStorage.removeItem('cp_user');
-            window.location.href = '/ui/auth.html';
-        }
-    } catch(e) { window.location.href = '/ui/auth.html'; }
-})();
-</script>
+<div class="video-bg">
+    <video autoplay muted loop playsinline>
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-star-field-in-space-32943-large.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+</div>
 
-<!-- ── Canvas Starfield Background (subtle for dashboard) ── -->
-<canvas id="starfield" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;opacity:0.55;"></canvas>
+<canvas id="starfield" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
 
-<!-- ══════════════════════════ NAVBAR ══════════════════════════ -->
+<!-- NAV -->
 <nav class="nav">
-
-    <a class="logo-wrap" href="/ui/" title="City Pulse">
-        <div class="logo-svg-wrap">
-            <div class="logo-bg"></div>
-            <img src="/ui/images/logo.png" alt="City Pulse" style="width:36px;height:36px;object-fit:contain;border-radius:10px;">
-        </div>
-        <span class="nav-title">city pulse</span>
+    <a class="nav-brand" href="/ui/" title="Ana Sayfaya Git" style="text-decoration:none;display:flex;align-items:center;gap:0.7rem;">
+        <img src="/ui/images/logo.png" alt="City Pulse Logo" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(255,197,61,0.4));">
+        <span class="nav-title" style="font-family:'Aldrich',sans-serif;font-size:1.15rem;font-weight:bold;color:var(--primary);letter-spacing:1px;">CITY PULSE</span>
     </a>
 
-    <div class="live"><div class="live-dot"></div>LIVE</div>
-
-    <div class="nav-divider"></div>
-
-    <!-- Section tabs -->
+    <!-- Navigation tabs -->
     <div class="nav-tabs">
         <button class="nav-tab active" data-section="exchange" onclick="navigateTo('exchange')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Döviz
         </button>
         <button class="nav-tab" data-section="news" onclick="navigateTo('news')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 6h10v4H2z"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="6" y1="18" x2="18" y2="18"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 6h10v4H2z"/><path d="M6 14h12M6 18h12"/></svg>
             Haberler
         </button>
         <button class="nav-tab" data-section="games" onclick="navigateTo('games')">
@@ -75,6 +150,14 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             Kripto
         </button>
+        <button class="nav-tab" data-section="bookmarks" onclick="navigateTo('bookmarks')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            Favorilerim
+        </button>
+        <button class="nav-tab" data-section="alerts" onclick="navigateTo('alerts')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            Alarmlarım
+        </button>
     </div>
 
     <div class="nav-gap"></div>
@@ -82,13 +165,14 @@
     <!-- Context-sensitive controls -->
     <div class="ctrl-group" id="ctrlGroup">
         <select class="ctrl" id="citySelect" onchange="onContextChange()">
-            <option value="istanbul">🇹🇷 İstanbul</option>
-            <option value="ankara">🇹🇷 Ankara</option>
-            <option value="new york">🇺🇸 New York</option>
-            <option value="london">🇬🇧 London</option>
-            <option value="berlin">🇩🇪 Berlin</option>
-            <option value="paris">🇫🇷 Paris</option>
-            <option value="tokyo">🇯🇵 Tokyo</option>
+            <option value="istanbul">📍 İstanbul</option>
+            <option value="ankara">📍 Ankara</option>
+            <option value="izmir">📍 İzmir</option>
+            <option value="new york">📍 New York</option>
+            <option value="london">📍 London</option>
+            <option value="berlin">📍 Berlin</option>
+            <option value="paris">📍 Paris</option>
+            <option value="tokyo">📍 Tokyo</option>
         </select>
         <select class="ctrl" id="langSelect" onchange="onContextChange()">
             <option value="tr">TR</option>
@@ -100,21 +184,27 @@
         </button>
     </div>
 
-    <span class="nav-user" id="navUser"></span>
-    <button class="btn-logout" onclick="logout()">Çıkış</button>
+    <a href="/ui/" title="Tanıtım Ana Sayfasına Dön" style="display:inline-flex;align-items:center;gap:0.35rem;background:rgba(255,197,61,0.08);border:1px solid var(--bdr);color:var(--primary);text-decoration:none;font-family:'Aldrich',sans-serif;font-size:0.75rem;padding:0.45rem 0.8rem;border-radius:6px;transition:all 0.2s;">
+        🏠 Ana Sayfa
+    </a>
 
+    <button class="nav-user" id="navUser" onclick="openProfileModal()" title="Profil & Tercihler" style="background:rgba(107,54,161,0.25);border:1px solid var(--bdr-a);color:var(--t1);cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;font-family:'Aldrich',sans-serif;font-size:0.8rem;padding:0.45rem 0.85rem;border-radius:6px;transition:background 0.2s;">
+        👤 Profil
+    </button>
+    
+    <button class="btn-logout" onclick="logout()">Çıkış</button>
 </nav>
 
-<!-- ══════════════════════════ MAIN ══════════════════════════ -->
+<!-- MAIN -->
 <main class="main">
 
-    <!-- ─── SECTION: Exchange ─── -->
+    <!-- SECTION: Exchange -->
     <div id="section-exchange" class="section">
         <div class="page-head">
-            <div class="page-city"><span>💱</span><span id="cityLabel">İstanbul</span> — Döviz Kurları</div>
+            <div class="page-city"><span>💰</span><span id="cityLabel">İstanbul</span> — Canlı Döviz Kurları</div>
             <div class="page-time" id="pageTime"></div>
         </div>
-        <div class="sec-lbl">Canlı Kurlar</div>
+        <div class="sec-lbl">Güncel Döviz Çiftleri</div>
         <div class="xgrid" id="xgrid">
             <div class="sk sk-x"></div>
             <div class="sk sk-x"></div>
@@ -123,7 +213,7 @@
         </div>
     </div>
 
-    <!-- ─── SECTION: News ─── -->
+    <!-- SECTION: News -->
     <div id="section-news" class="section hidden">
         <div class="page-head">
             <div class="page-city"><span>📰</span><span id="cityLabelNews">İstanbul</span> — Günün Haberleri</div>
@@ -139,10 +229,10 @@
         </div>
     </div>
 
-    <!-- ─── SECTION: Games ─── -->
+    <!-- SECTION: Games -->
     <div id="section-games" class="section hidden">
         <div class="page-head">
-            <div class="page-city"><span>🎮</span>Oyun Fırsatları</div>
+            <div class="page-city"><span>🎮</span>Oyun Fırsatları & İndirimler</div>
             <span class="col-badge" id="gamesBadge">—</span>
         </div>
         <div class="games-grid" id="glist">
@@ -155,10 +245,10 @@
         </div>
     </div>
 
-    <!-- ─── SECTION: NASA ─── -->
+    <!-- SECTION: NASA -->
     <div id="section-nasa" class="section hidden">
         <div class="page-head">
-            <div class="page-city"><span>🚀</span>NASA — Günün Astronomik Karesi</div>
+            <div class="page-city"><span>🚀</span>NASA — Günün Astronomik Karesi (APOD)</div>
         </div>
         <div id="nasaContent">
             <div class="nasa-page">
@@ -172,10 +262,10 @@
         </div>
     </div>
 
-    <!-- ─── SECTION: GitHub ─── -->
+    <!-- SECTION: GitHub -->
     <div id="section-github" class="section hidden">
         <div class="page-head">
-            <div class="page-city"><span>⭐</span>GitHub Trending</div>
+            <div class="page-city"><span>⭐</span>GitHub Trending Depoları</div>
         </div>
         <div class="gh-grid" id="ghgrid">
             <div class="sk sk-c"></div>
@@ -187,20 +277,20 @@
         </div>
     </div>
 
-    <!-- ─── SECTION: Weather ─── -->
+    <!-- SECTION: Weather -->
     <div id="section-weather" class="section hidden">
         <div class="page-head">
-            <div class="page-city"><span>🌤️</span><span id="cityLabelWeather">İstanbul</span> — Hava Durumu</div>
+            <div class="page-city"><span>⛅</span><span id="cityLabelWeather">İstanbul</span> — Hava Durumu</div>
         </div>
         <div id="weatherContent" style="display:flex; justify-content:center; padding:2rem 0;">
             <div class="sk sk-x" style="width:100%; max-width:500px;"></div>
         </div>
     </div>
 
-    <!-- ─── SECTION: Crypto ─── -->
+    <!-- SECTION: Crypto -->
     <div id="section-crypto" class="section hidden">
         <div class="page-head">
-            <div class="page-city"><span>🪙</span>Kripto Paralar (CoinGecko)</div>
+            <div class="page-city"><span>🪙</span>Kripto Paralar & Piyasa Değerleri</div>
         </div>
         <div class="crypto-grid" id="cryptolist" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:1rem;">
             <div class="sk sk-c"></div>
@@ -209,7 +299,125 @@
             <div class="sk sk-c"></div>
         </div>
     </div>
+
+    <!-- SECTION: Bookmarks -->
+    <div id="section-bookmarks" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>🔖</span>Kaydedilen Yer İmleri</div>
+            <span class="col-badge" id="bookmarkCountBadge">0 Kayıt</span>
+        </div>
+        <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+            <button class="nav-tab active" onclick="filterBookmarks('all', this)">Tümü</button>
+            <button class="nav-tab" onclick="filterBookmarks('news', this)">Haberler</button>
+            <button class="nav-tab" onclick="filterBookmarks('game', this)">Oyunlar</button>
+            <button class="nav-tab" onclick="filterBookmarks('crypto', this)">Kripto</button>
+        </div>
+        <div class="news-grid" id="bookmarkList">
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+            <div class="sk sk-c"></div>
+        </div>
+    </div>
+
+    <!-- SECTION: Alerts -->
+    <div id="section-alerts" class="section hidden">
+        <div class="page-head">
+            <div class="page-city"><span>🔔</span>Fiyat Alarmları & Bildirimler</div>
+            <span class="col-badge" id="alertCountBadge">0 Alarm</span>
+        </div>
+
+        <div class="alert-form-card">
+            <h3 style="font-family:'Aldrich',sans-serif; color:var(--primary); margin-bottom:1rem; font-size:1.1rem;">Yeni Fiyat Alarmı Kur</h3>
+            <form id="alertForm" onsubmit="handleCreateAlert(event)" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)) 140px; gap:1rem; align-items:flex-end;">
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--t3); margin-bottom:0.3rem; text-transform:uppercase;">Parite / Varlık</label>
+                    <select class="alert-input" id="alertPair" style="width:100%;">
+                        <option value="USD/TRY">USD / TRY</option>
+                        <option value="EUR/TRY">EUR / TRY</option>
+                        <option value="GBP/TRY">GBP / TRY</option>
+                        <option value="bitcoin">Bitcoin (BTC/USD)</option>
+                        <option value="ethereum">Ethereum (ETH/USD)</option>
+                        <option value="solana">Solana (SOL/USD)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--t3); margin-bottom:0.3rem; text-transform:uppercase;">Koşul</label>
+                    <select class="alert-input" id="alertCondition" style="width:100%;">
+                        <option value="above">Fiyat Üstüne Çıkarsa (&ge;)</option>
+                        <option value="below">Fiyat Altına Düşerse (&le;)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--t3); margin-bottom:0.3rem; text-transform:uppercase;">Hedef Değer</label>
+                    <input type="number" step="any" class="alert-input" id="alertTargetRate" placeholder="Örn: 40.50" required style="width:100%;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--t3); margin-bottom:0.3rem; text-transform:uppercase;">Not (Opsiyonel)</label>
+                    <input type="text" class="alert-input" id="alertNote" placeholder="Örn: Bozdur" style="width:100%;">
+                </div>
+                <button type="submit" class="btn-refresh" style="height:40px; display:flex; align-items:center; justify-content:center; background:var(--primary); color:var(--dark); font-weight:bold;">
+                    Alarm Kur
+                </button>
+            </form>
+        </div>
+
+        <div class="sec-lbl">Aktif Alarmlarınız</div>
+        <div id="alertsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1rem;">
+            <div class="sk sk-x"></div>
+            <div class="sk sk-x"></div>
+        </div>
+    </div>
+
 </main>
+
+<!-- Profile & Preferences Modal -->
+<div id="profileModal" class="modal-overlay hidden" style="display:none;" onclick="if(event.target===this) closeProfileModal()">
+    <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3 style="font-family:'Aldrich',sans-serif; color:var(--primary); font-size:1.2rem;">Kullanıcı Profili & Tercihler</h3>
+            <button type="button" onclick="closeProfileModal()" title="Kapat" style="background:none; border:none; color:var(--t3); font-size:1.8rem; line-height:1; cursor:pointer; padding:0.2rem 0.5rem; border-radius:4px;">&times;</button>
+        </div>
+        <div id="profileDetails" style="margin-bottom:1.5rem; font-size:0.9rem; line-height:1.7; color:var(--t2);">
+            <div><strong>Kullanıcı Adı:</strong> <span id="profUsername">-</span></div>
+            <div><strong>E-Posta:</strong> <span id="profEmail">-</span></div>
+            <div><strong>Kayıtlı Favori:</strong> <span id="profBookmarkCount">0</span></div>
+        </div>
+        <hr style="border-color:var(--bdr); margin-bottom:1.5rem;">
+        <form id="prefForm" onsubmit="return handleSavePreferences(event)">
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-size:0.8rem; color:var(--t3); margin-bottom:0.4rem;">Varsayılan Şehir</label>
+                <select class="alert-input" id="prefDefaultCity" style="width:100%;">
+                    <option value="istanbul">İstanbul</option>
+                    <option value="ankara">Ankara</option>
+                    <option value="izmir">İzmir</option>
+                    <option value="london">London</option>
+                    <option value="new york">New York</option>
+                    <option value="tokyo">Tokyo</option>
+                </select>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label style="display:block; font-size:0.8rem; color:var(--t3); margin-bottom:0.4rem;">Varsayılan Dil</label>
+                <select class="alert-input" id="prefDefaultLang" style="width:100%;">
+                    <option value="tr">TR (Türkçe)</option>
+                    <option value="en">EN (İngilizce)</option>
+                    <option value="de">DE (Almanca)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <button type="submit" class="btn-refresh" style="flex:2; background:var(--primary); color:var(--dark); font-weight:bold; height:42px; justify-content:center;">
+                    Tercihleri Kaydet
+                </button>
+                <button type="button" onclick="handleResetPreferences()" class="btn-logout" style="flex:1; height:42px;">
+                    Sıfırla
+                </button>
+                <button type="button" onclick="closeProfileModal()" class="btn-logout" style="flex:1; height:42px; background:rgba(255,255,255,0.08); border-color:var(--bdr);">
+                    Kapat
+                </button>
+            </div>
+            <div id="prefMsg" style="margin-top:0.8rem; font-size:0.85rem; text-align:center; min-height:20px;"></div>
+        </form>
+    </div>
+</div>
 
 <script src="/ui/js/particles.js"></script>
 <script>
@@ -221,10 +429,9 @@
         window.location.href = '/ui/';
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const user = JSON.parse(localStorage.getItem('cp_user') || '{}');
-        const el = document.getElementById('navUser');
-        if (el && user.username) el.textContent = '👤 ' + user.username;
+    // ESC key closes modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeProfileModal();
     });
 </script>
 <script src="/ui/js/app.js"></script>
