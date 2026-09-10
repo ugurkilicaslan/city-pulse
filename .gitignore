@@ -1,3 +1,25 @@
+﻿# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Local configs and env
 tmp/
 config/local-config.json
 *.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
